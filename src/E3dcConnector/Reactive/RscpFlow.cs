@@ -12,7 +12,7 @@ namespace E3dcConnector.Reactive;
 
 public static class RscpFlow
 {
-    internal static Flow<IRscpCommand, IRscpMessage, NotUsed> Create(
+    public static Flow<IRscpCommand, IRscpMessage, NotUsed> Create(
         Func<RscpConnection> connectionFactory,
         RscpTag[]? pollingTags = null,
         RscpFlowSettings? settings = null)

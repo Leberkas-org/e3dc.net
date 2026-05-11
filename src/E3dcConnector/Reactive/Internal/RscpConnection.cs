@@ -6,7 +6,7 @@ using E3dcConnector.Tags;
 
 namespace E3dcConnector.Reactive.Internal;
 
-internal sealed class RscpConnection : IDisposable
+public sealed class RscpConnection : IDisposable
 {
     private readonly string _host;
     private readonly int _port;
