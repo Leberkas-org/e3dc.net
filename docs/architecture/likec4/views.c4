@@ -1,0 +1,28 @@
+views {
+  view systemContext of connector {
+    title 'System Context'
+    include user, e3dc, connector
+  }
+
+  view pipeline of connector.flow {
+    title 'Akka.Streams Pipeline'
+    include
+      connector.flow,
+      connector.flow.merge,
+      connector.flow.encode,
+      connector.flow.execute,
+      connector.flow.decode,
+      connector.connection,
+      connector.client
+  }
+
+  view layers of connector {
+    title 'Protocol Layers'
+    include
+      connector.typed,
+      connector.flow,
+      connector.protocol,
+      connector.connection,
+      e3dc
+  }
+}
