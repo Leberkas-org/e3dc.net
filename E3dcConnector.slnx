@@ -1,0 +1,14 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/E3dcConnector/E3dcConnector.csproj" />
+    <Project Path="src/E3dcConnector.Typed/E3dcConnector.Typed.csproj" />
+  </Folder>
+  <Folder Name="/test/">
+    <Project Path="test/E3dcConnector.Tests/E3dcConnector.Tests.csproj" />
+  </Folder>
+  <Folder Name="/samples/">
+    <Project Path="samples/E3dcConnector.Sample/E3dcConnector.Sample.csproj" />
+    <Project Path="samples/E3dcConnector.FlowSample/E3dcConnector.FlowSample.csproj" />
+    <Project Path="samples/E3dcConnector.ActorSample/E3dcConnector.ActorSample.csproj" />
+  </Folder>
+</Solution>
