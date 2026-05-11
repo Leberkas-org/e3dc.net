@@ -48,6 +48,6 @@ The encoding stack from typed .NET records down to encrypted TCP bytes:
 
 ## Source
 
-The LikeC4 architecture model is defined in:
-- [`likec4/model.c4`](./likec4/model.c4) — elements and relationships
-- [`likec4/views.c4`](./likec4/views.c4) — diagram views (system context, pipeline, layers)
+The LikeC4 architecture model is defined in `docs/architecture/likec4/`:
+- `model.c4` — elements and relationships
+- `views.c4` — diagram views (system context, pipeline, layers)
