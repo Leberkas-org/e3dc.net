@@ -1,8 +1,48 @@
 import { defineConfig } from 'vitepress'
+import { withMermaid } from 'vitepress-plugin-mermaid'
 
-export default defineConfig({
+export default withMermaid(defineConfig({
   title: 'E3DC Connector',
   description: 'Akka.Streams RSCP client for E3DC S10 Pro',
+  head: [
+    ['style', {}, `
+      :root {
+        --vp-c-brand-1: #4aad35;
+        --vp-c-brand-2: #5CC244;
+        --vp-c-brand-3: #6ed058;
+        --vp-c-brand-soft: rgba(92, 194, 68, 0.14);
+        --vp-home-hero-name-color: transparent;
+        --vp-home-hero-name-background: linear-gradient(135deg, #5CC244 0%, #D4FC37 100%);
+        --vp-home-hero-image-background-image: linear-gradient(135deg, rgba(92, 194, 68, 0.3) 0%, rgba(212, 252, 55, 0.2) 100%);
+        --vp-home-hero-image-filter: blur(56px);
+      }
+      .dark {
+        --vp-c-brand-1: #6ed058;
+        --vp-c-brand-2: #5CC244;
+        --vp-c-brand-3: #4aad35;
+        --vp-c-brand-soft: rgba(92, 194, 68, 0.16);
+      }
+      :root {
+        --vp-button-brand-bg: #5CC244;
+        --vp-button-brand-hover-bg: #4aad35;
+        --vp-button-brand-active-bg: #3d9a2c;
+      }
+    `],
+  ],
+  mermaid: {
+    theme: 'base',
+    themeVariables: {
+      primaryColor: '#5CC244',
+      primaryTextColor: '#fff',
+      primaryBorderColor: '#3d9a2c',
+      secondaryColor: '#D4FC37',
+      secondaryTextColor: '#2E3538',
+      tertiaryColor: '#2E3538',
+      tertiaryTextColor: '#fff',
+      lineColor: '#5CC244',
+      fontSize: '14px',
+    },
+  },
   themeConfig: {
     nav: [
       { text: 'Guide', link: '/guide/getting-started' },
@@ -60,5 +100,8 @@ export default defineConfig({
       ]
     },
     search: { provider: 'local' },
+    footer: {
+      message: 'E3DC S10 Pro RSCP Client Library',
+    },
   }
-})
+}))

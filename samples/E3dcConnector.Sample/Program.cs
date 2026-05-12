@@ -1,7 +1,7 @@
 using E3dcConnector.Client;
-using E3dcConnector.Messages.Commands;
+using E3dcConnector.Messages;
+using E3dcConnector.Messages.Descriptors;
 using E3dcConnector.Messages.Responses;
-using E3dcConnector.Tags;
 using E3dcConnector.Typed;
 
 var host = args.Length > 0 ? args[0] : "192.168.1.100";
@@ -17,13 +17,10 @@ var client = new RscpClientBuilder()
 
 await using (client)
 {
-    var response = await client.SendAsync(new ReadTagsCommand([
-        RscpTag.EMS_REQ_POWER_PV,
-        RscpTag.EMS_REQ_POWER_BAT,
-        RscpTag.EMS_REQ_POWER_GRID,
-        RscpTag.EMS_REQ_POWER_HOME,
-        RscpTag.EMS_REQ_BAT_SOC,
-    ]));
+    var response = await client.SendAsync(
+        RscpRequest.Create()
+            .Read(Ems.PowerPv, Ems.PowerBat, Ems.PowerGrid, Ems.PowerHome)
+            .Read(Ems.BatSoc));
 
     if (response is RscpDataResponse data)
     {

@@ -79,9 +79,10 @@ public static class RscpFlow
         {
             var items = cmd switch
             {
+                RscpRequest request => request.BuildItems(),
                 ReadTagsCommand read => read.Tags
                     .Select(t => new RscpDataItem((uint)t, RscpDataType.None, Array.Empty<byte>()))
-                    .ToList(),
+                    .ToList() as IReadOnlyList<RscpDataItem>,
                 WriteTagCommand write => new List<RscpDataItem>
                 {
                     new((uint)write.Tag, write.DataType, write.Value)

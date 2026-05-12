@@ -1,4 +1,5 @@
 views {
+
   view systemContext of connector {
     title 'System Context'
     include user, e3dc, connector
@@ -7,13 +8,10 @@ views {
   view pipeline of connector.flow {
     title 'Akka.Streams Pipeline'
     include
+      connector.client,
       connector.flow,
-      connector.flow.merge,
-      connector.flow.encode,
-      connector.flow.execute,
-      connector.flow.decode,
-      connector.connection,
-      connector.client
+      connector.flow.*,
+      connector.connection
   }
 
   view layers of connector {

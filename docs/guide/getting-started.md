@@ -15,9 +15,9 @@ Read the current PV power from your E3DC S10 in 10 lines:
 
 ```csharp
 using E3dcConnector.Client;
-using E3dcConnector.Messages.Commands;
+using E3dcConnector.Messages;
+using E3dcConnector.Messages.Descriptors;
 using E3dcConnector.Messages.Responses;
-using E3dcConnector.Tags;
 using E3dcConnector.Typed;
 
 var client = new RscpClientBuilder()
@@ -28,10 +28,9 @@ var client = new RscpClientBuilder()
 
 await using (client)
 {
-    var response = await client.SendAsync(new ReadTagsCommand([
-        RscpTag.EMS_REQ_POWER_PV,
-        RscpTag.EMS_REQ_BAT_SOC,
-    ]));
+    var response = await client.SendAsync(
+        RscpRequest.Create()
+            .Read(Ems.PowerPv, Ems.BatSoc));
 
     if (response is RscpDataResponse data)
     {

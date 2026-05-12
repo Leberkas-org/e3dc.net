@@ -8,6 +8,9 @@
     "docs:preview": "vitepress preview"
   },
   "devDependencies": {
-    "vitepress": "^1.6.0"
+    "likec4": "^1.20.0",
+    "mermaid": "^11.4.0",
+    "vitepress": "^1.6.0",
+    "vitepress-plugin-mermaid": "^2.0.0"
   }
 }

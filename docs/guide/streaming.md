@@ -35,10 +35,9 @@ await foreach (var msg in messages.ReadAllAsync())
 While polling runs automatically, you can also send one-off commands:
 
 ```csharp
-await commands.WriteAsync(new ReadTagsCommand([
-    RscpTag.INFO_REQ_SERIAL_NUMBER,
-    RscpTag.INFO_REQ_SW_RELEASE,
-]));
+await commands.WriteAsync(
+    RscpRequest.Create()
+        .Read(Info.SerialNumber, Info.SwRelease));
 ```
 
 ## Composing with Other Stages

@@ -1,19 +1,17 @@
 # Imperative Client
 
-The `RscpClient` provides async/await request-response communication.
+The `RscpClient` provides async/await request-response communication using the fluent `RscpRequest` builder.
 
 ## Reading Data
 
 ```csharp
-var response = await client.SendAsync(new ReadTagsCommand([
-    RscpTag.EMS_REQ_POWER_PV,
-    RscpTag.EMS_REQ_POWER_BAT,
-    RscpTag.EMS_REQ_POWER_GRID,
-    RscpTag.EMS_REQ_POWER_HOME,
-    RscpTag.EMS_REQ_BAT_SOC,
-    RscpTag.EMS_REQ_AUTARKY,
-    RscpTag.EMS_REQ_SELF_CONSUMPTION,
-]));
+using E3dcConnector.Messages;
+using E3dcConnector.Messages.Descriptors;
+
+var response = await client.SendAsync(
+    RscpRequest.Create()
+        .Read(Ems.PowerPv, Ems.PowerBat, Ems.PowerGrid, Ems.PowerHome)
+        .Read(Ems.BatSoc, Ems.Autarky, Ems.SelfConsumption));
 
 if (response is RscpDataResponse data)
 {
@@ -25,11 +23,49 @@ if (response is RscpDataResponse data)
 ## Writing Data
 
 ```csharp
-var response = await client.SendAsync(new WriteTagCommand(
-    RscpTag.EMS_REQ_SET_POWER_MODE,
-    RscpDataType.UChar8,
-    new byte[] { 1 } // Idle mode
-));
+var response = await client.SendAsync(
+    RscpRequest.Create()
+        .Write(Ems.SetPowerMode, (byte)1));  // Idle mode
+```
+
+For grouped writes that need a container:
+
+```csharp
+var response = await client.SendAsync(
+    RscpRequest.Create()
+        .Container(Ems.SetPower, b => b
+            .Write(Ems.SetPowerMode, (byte)3)     // Charge mode
+            .Write(Ems.SetPowerValue, 2000)));     // 2000 watts
+```
+
+## Indexed Devices (PVI, BAT, PM, WB)
+
+Devices with multiple instances (inverters, batteries, etc.) use `FromDevice()`:
+
+```csharp
+var response = await client.SendAsync(
+    RscpRequest.Create()
+        .FromDevice(Pvi.Device, index: 0, b => b
+            .Read(Pvi.AcPower, Pvi.AcVoltage, Pvi.DcPower)));
+```
+
+Trying to use an `IndexedTag` at the top level is a **compile error**:
+
+```csharp
+// This won't compile — Pvi.AcPower is IndexedTag, not TagDescriptor
+RscpRequest.Create().Read(Pvi.AcPower);  // CS1503
+```
+
+## Composing Mixed Requests
+
+Read top-level EMS data and indexed device data in one request:
+
+```csharp
+var response = await client.SendAsync(
+    RscpRequest.Create()
+        .Read(Ems.PowerPv, Ems.BatSoc)
+        .FromDevice(Pvi.Device, 0, b => b.Read(Pvi.AcPower))
+        .FromDevice(Bat.Device, 0, b => b.Read(Bat.Rsoc, Bat.ChargeCycles)));
 ```
 
 ## Error Handling
@@ -52,7 +88,7 @@ All operations support `CancellationToken`:
 
 ```csharp
 using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(5));
-var response = await client.SendAsync(command, cts.Token);
+var response = await client.SendAsync(request, cts.Token);
 ```
 
 ## Disposal

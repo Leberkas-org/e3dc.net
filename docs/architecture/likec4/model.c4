@@ -5,61 +5,74 @@ specification {
 }
 
 model {
-  actor user = 'Your Application' {
+
+  actor user {
+    title 'Your Application'
     description 'Consumer of the e3dc-connector library'
   }
 
-  system e3dc = 'E3DC S10 Pro' {
+  system e3dc {
+    title 'E3DC S10 Pro'
     description 'Home battery system with RSCP protocol on TCP:5033'
   }
 
-  system connector = 'e3dc-connector' {
+  system connector {
+    title 'e3dc-connector'
     description '.NET Akka.Streams RSCP client library'
 
-    component client = 'RscpClient' {
+    component client {
+      title 'RscpClient'
       description 'Correlation-based request-reply via channels'
     }
 
-    component flow = 'RscpFlow' {
+    component flow {
+      title 'RscpFlow'
       description 'Akka.Streams pipeline wrapped in RestartFlow'
 
-      component merge = 'MergePreferred' {
+      component merge {
+        title 'MergePreferred'
         description 'Merges polling tick + on-demand commands'
       }
 
-      component encode = 'EncodeStage' {
+      component encode {
+        title 'EncodeStage'
         description 'IRscpCommand to RscpFrame bytes'
       }
 
-      component execute = 'ExecuteStage' {
+      component execute {
+        title 'ExecuteStage'
         description 'TCP send/receive with Rijndael-256'
       }
 
-      component decode = 'DecodeStage' {
+      component decode {
+        title 'DecodeStage'
         description 'RscpFrame bytes to IRscpMessage'
       }
     }
 
-    component connection = 'RscpConnection' {
+    component connection {
+      title 'RscpConnection'
       description 'TCP socket, Rijndael-256 CBC state, auth handshake'
     }
 
-    component protocol = 'Protocol Layer' {
+    component protocol {
+      title 'Protocol Layer'
       description 'RscpFrame, RscpDataItem, RscpCrypt, RscpDataType'
     }
 
-    component typed = 'Typed Layer' {
-      description 'EmsPowerSnapshot, BatterySnapshot, InverterSnapshot, ...'
+    component typed {
+      title 'Typed Layer'
+      description 'EmsPowerSnapshot, BatterySnapshot, InverterSnapshot'
     }
   }
 
   user -> connector.client 'SendAsync / Subscribe'
   connector.client -> connector.flow 'ChannelWriter'
   connector.flow -> connector.client 'ChannelReader'
-  connector.flow.merge -> connector.flow.encode
-  connector.flow.encode -> connector.flow.execute
-  connector.flow.execute -> connector.flow.decode
-  connector.flow.execute -> connector.connection 'SendFrameAsync / ReceiveFrameAsync'
+  connector.flow.merge -> connector.flow.encode 'commands'
+  connector.flow.encode -> connector.flow.execute 'frame bytes'
+  connector.flow.execute -> connector.flow.decode 'response bytes'
+  connector.flow.execute -> connector.connection 'SendFrame / ReceiveFrame'
   connector.connection -> connector.protocol 'Serialize / Deserialize'
   connector.connection -> e3dc 'TCP:5033 Rijndael-256 CBC'
   connector.flow.decode -> connector.typed 'Parse tag responses'
