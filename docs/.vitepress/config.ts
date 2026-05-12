@@ -11,6 +11,7 @@ export default defineConfig({
     },
   },
   head: [
+    ['script', { src: '/likec4-views.js', defer: 'true' }],
     ['style', {}, `
       :root {
         --vp-c-brand-1: #4aad35;

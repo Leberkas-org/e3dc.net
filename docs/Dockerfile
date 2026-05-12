@@ -3,7 +3,7 @@ WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm ci
 COPY . .
-RUN npx likec4 codegen webcomponent --no-use-dot -o ./.vitepress/theme/likec4-views.js ./architecture/likec4
+RUN npx likec4 codegen webcomponent --no-use-dot -o ./public/likec4-views.js ./architecture/likec4
 RUN npx vitepress build
 
 FROM nginx:alpine
