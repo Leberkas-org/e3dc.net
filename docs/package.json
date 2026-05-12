@@ -3,14 +3,13 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "docs:dev": "vitepress dev",
-    "docs:build": "vitepress build",
+    "likec4:gen": "likec4 codegen webcomponent -o ./.vitepress/theme/likec4-views.js ./architecture/likec4",
+    "docs:dev": "npm run likec4:gen && vitepress dev",
+    "docs:build": "npm run likec4:gen && vitepress build",
     "docs:preview": "vitepress preview"
   },
   "devDependencies": {
     "likec4": "^1.20.0",
-    "mermaid": "^11.4.0",
-    "vitepress": "^1.6.0",
-    "vitepress-plugin-mermaid": "^2.0.0"
+    "vitepress": "^1.6.0"
   }
 }

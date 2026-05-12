@@ -1,9 +1,15 @@
 import { defineConfig } from 'vitepress'
-import { withMermaid } from 'vitepress-plugin-mermaid'
 
-export default withMermaid(defineConfig({
+export default defineConfig({
   title: 'E3DC Connector',
   description: 'Akka.Streams RSCP client for E3DC S10 Pro',
+  vue: {
+    template: {
+      compilerOptions: {
+        isCustomElement: (tag) => tag === 'likec4-view',
+      },
+    },
+  },
   head: [
     ['style', {}, `
       :root {
@@ -27,22 +33,17 @@ export default withMermaid(defineConfig({
         --vp-button-brand-hover-bg: #4aad35;
         --vp-button-brand-active-bg: #3d9a2c;
       }
+      likec4-view {
+        display: block;
+        width: 100%;
+        height: 450px;
+        margin: 1.5rem 0;
+        border: 1px solid var(--vp-c-divider);
+        border-radius: 8px;
+        overflow: hidden;
+      }
     `],
   ],
-  mermaid: {
-    theme: 'base',
-    themeVariables: {
-      primaryColor: '#5CC244',
-      primaryTextColor: '#fff',
-      primaryBorderColor: '#3d9a2c',
-      secondaryColor: '#D4FC37',
-      secondaryTextColor: '#2E3538',
-      tertiaryColor: '#2E3538',
-      tertiaryTextColor: '#fff',
-      lineColor: '#5CC244',
-      fontSize: '14px',
-    },
-  },
   themeConfig: {
     nav: [
       { text: 'Guide', link: '/guide/getting-started' },
@@ -104,4 +105,4 @@ export default withMermaid(defineConfig({
       message: 'E3DC S10 Pro RSCP Client Library',
     },
   }
-}))
+})

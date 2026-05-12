@@ -1,77 +1,24 @@
 # Architecture
 
-The e3dc-connector library is structured in layers, each with clear responsibilities.
+The e3dc-connector library is structured in layers, each with clear responsibilities. Diagrams are rendered from [LikeC4](https://likec4.dev) models — click to explore interactively.
 
 ## System Context
 
 The library sits between your application and the E3DC S10 Pro hardware, handling all protocol complexity.
 
-```mermaid
-graph LR
-    App["Your Application"]
-    Lib["e3dc-connector"]
-    E3DC["E3DC S10 Pro"]
-
-    App -- "RscpRequest.Create()
-    .Read(Ems.PowerPv)" --> Lib
-    Lib -- "TCP:5033
-    Rijndael-256 CBC" --> E3DC
-
-    style Lib fill:#5CC244,color:#fff,stroke:#3d9a2c
-    style E3DC fill:#2E3538,color:#fff,stroke:#555
-    style App fill:#4a90d9,color:#fff,stroke:#357abd
-```
+<likec4-view view-id="systemContext"></likec4-view>
 
 ## Akka.Streams Pipeline
 
 Internally, commands flow through an Akka.Streams pipeline that handles serialization, TCP communication with Rijndael-256 encryption, and deserialization. `RestartFlow.WithBackoff` provides automatic reconnection with exponential backoff.
 
-```mermaid
-graph LR
-    subgraph RestartFlow["RestartFlow.WithBackoff"]
-        Tick["Source.Tick\n(polling)"]
-        Cmd["On-demand\ncommands"]
-        Merge["MergePreferred"]
-        Enc["EncodeStage"]
-        Exec["ExecuteStage"]
-        Dec["DecodeStage"]
-
-        Tick --> Merge
-        Cmd --> Merge
-        Merge --> Enc --> Exec --> Dec
-    end
-
-    Conn["RscpConnection\nTCP + Rijndael-256"]
-    Sink["ChannelSink\n(responses)"]
-
-    Exec <--> Conn
-    Dec --> Sink
-
-    style RestartFlow fill:#f0faf0,stroke:#5CC244
-    style Conn fill:#2E3538,color:#fff,stroke:#555
-    style Exec fill:#5CC244,color:#fff,stroke:#3d9a2c
-```
+<likec4-view view-id="pipeline"></likec4-view>
 
 ## Protocol Layers
 
 The encoding stack from typed .NET records down to encrypted TCP bytes:
 
-```mermaid
-graph TB
-    T["Typed Layer\nEmsPowerSnapshot, BatterySnapshot, ..."]
-    M["Message Layer\nRscpRequest builder, TagDescriptor, IndexedTag"]
-    F["Frame Layer\nRscpFrame, RscpDataItem, CRC32"]
-    C["Crypto Layer\nRijndael-256 CBC (BouncyCastle)"]
-    N["Transport\nTCP Port 5033"]
-
-    T --> M --> F --> C --> N
-
-    style T fill:#D4FC37,color:#2E3538,stroke:#aaa
-    style M fill:#8ed674,color:#2E3538,stroke:#5CC244
-    style F fill:#5CC244,color:#fff,stroke:#3d9a2c
-    style C fill:#3d9a2c,color:#fff,stroke:#2a7a1e
-    style N fill:#2E3538,color:#fff,stroke:#555
-```
+<likec4-view view-id="layers"></likec4-view>
 
 | Layer | Component | Responsibility |
 |-------|-----------|----------------|
@@ -92,9 +39,3 @@ graph TB
 **Channel bridging:** Commands flow through a bounded `Channel<IRscpCommand>` (capacity 256), responses through an unbounded `Channel<IRscpMessage>`. The Akka.Streams flow runs independently in the background.
 
 **Automatic reconnection:** The entire inner flow is wrapped in `RestartFlow.WithBackoff` (1s-30s exponential backoff, 20% jitter). On restart, a new TCP connection is established and authentication is re-executed.
-
-## LikeC4 Source
-
-The architecture is also modeled in LikeC4 in `docs/architecture/likec4/`:
-- `model.c4` — elements and relationships
-- `views.c4` — diagram views
