@@ -4,20 +4,7 @@ After establishing a TCP connection and setting up encryption, the client must a
 
 ## Authentication Flow
 
-```
-Client                          E3DC S10
-  │                                │
-  ├──TCP Connect (port 5033)──────►│
-  │                                │
-  ├──RSCP_REQ_AUTHENTICATION─────►│
-  │  (Container with user+pass)    │
-  │                                │
-  │◄──RSCP_AUTHENTICATION─────────┤
-  │  (Auth level: 0=fail, 10=ok)   │
-  │                                │
-  ├──EMS_REQ_POWER_PV────────────►│
-  │  (normal requests now work)    │
-```
+<likec4-view view-id="authFlow"></likec4-view>
 
 ## Authentication Request
 

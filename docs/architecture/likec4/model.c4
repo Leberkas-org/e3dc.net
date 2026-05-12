@@ -76,4 +76,6 @@ model {
   connector.connection -> connector.protocol 'Serialize / Deserialize'
   connector.connection -> e3dc 'TCP:5033 Rijndael-256 CBC'
   connector.flow.decode -> connector.typed 'Parse tag responses'
+
+  connector.connection -> connector.connection 'Encrypt / Decrypt frames'
 }

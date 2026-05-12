@@ -23,4 +23,24 @@ views {
       connector.connection,
       e3dc
   }
+
+  dynamic view authFlow {
+    title 'RSCP Authentication Flow'
+
+    connector.client -> connector.connection 'TCP Connect (port 5033)'
+    connector.connection -> e3dc 'SYN/ACK'
+
+    connector.client -> connector.connection 'Build auth frame'
+    connector.connection -> connector.connection 'Encrypt with Rijndael-256'
+    connector.connection -> e3dc 'RSCP_REQ_AUTHENTICATION (user + password)'
+
+    e3dc -> connector.connection 'RSCP_AUTHENTICATION (auth level)'
+    connector.connection -> connector.connection 'Decrypt response'
+    connector.connection -> connector.client 'Auth level (0=fail, 10=user, 20=install)'
+
+    connector.client -> connector.connection 'Ready for requests'
+    connector.connection -> e3dc 'EMS_REQ_POWER_PV, ...'
+
+    include connector.client, connector.connection, e3dc
+  }
 }
