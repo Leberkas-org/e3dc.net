@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using System.Text.Json;
 using Akka.Actor;
 using Akka.Streams;
@@ -34,6 +35,9 @@ var (_, messages) = flow.Materialize(materializer);
 var jsonOptions = new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
 object? latestData = null;
 
+const int MaxHistory = 1800; // 1 hour at 2s intervals
+var history = new ConcurrentQueue<object>();
+
 _ = Task.Run(async () =>
 {
     await foreach (var msg in messages.ReadAllAsync())
@@ -43,7 +47,7 @@ _ = Task.Run(async () =>
         var bat = data.ToBatterySnapshot();
         if (ems is null) continue;
 
-        latestData = new
+        var snapshot = new
         {
             ems.PvWatts,
             ems.BatteryWatts,
@@ -57,6 +61,10 @@ _ = Task.Run(async () =>
             ChargeCycles = bat?.ChargeCycles ?? 0,
             Timestamp = DateTimeOffset.UtcNow,
         };
+
+        latestData = snapshot;
+        history.Enqueue(snapshot);
+        while (history.Count > MaxHistory) history.TryDequeue(out _);
     }
 });
 
@@ -79,6 +87,9 @@ app.MapGet("/api/stream", async (HttpContext ctx) =>
         await Task.Delay(2000, ctx.RequestAborted);
     }
 });
+
+app.MapGet("/api/history", () =>
+    Results.Json(history.ToArray(), jsonOptions));
 
 app.MapFallback(async ctx =>
 {

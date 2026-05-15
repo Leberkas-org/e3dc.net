@@ -1,0 +1,9 @@
+services:
+  dashboard:
+    build:
+      context: ..
+      dockerfile: samples/E3dcConnector.Dashboard/Dockerfile
+    ports:
+      - "15000:8080"
+    env_file:
+      - .env
