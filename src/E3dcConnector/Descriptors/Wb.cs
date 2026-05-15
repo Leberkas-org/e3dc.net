@@ -1,6 +1,7 @@
+using E3dcConnector.Messages;
 using E3dcConnector.Tags;
 
-namespace E3dcConnector.Messages.Descriptors;
+namespace E3dcConnector.Descriptors;
 
 public static class Wb
 {

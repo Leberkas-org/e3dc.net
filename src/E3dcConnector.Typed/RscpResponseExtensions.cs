@@ -78,11 +78,26 @@ public static class RscpResponseExtensions
         return found ? new DeviceInfo(serial, prod, sw, ip, mask, gw) : null;
     }
 
-    private static int ReadInt32(RscpDataItem item)
-        => BinaryPrimitives.ReadInt32LittleEndian(item.Value.Span);
+    private static int ReadInt32(RscpDataItem item) => item.DataType switch
+    {
+        RscpDataType.Int32  => BinaryPrimitives.ReadInt32LittleEndian(item.Value.Span),
+        RscpDataType.UInt32 => (int)BinaryPrimitives.ReadUInt32LittleEndian(item.Value.Span),
+        RscpDataType.Int16  => BinaryPrimitives.ReadInt16LittleEndian(item.Value.Span),
+        RscpDataType.UInt16 => BinaryPrimitives.ReadUInt16LittleEndian(item.Value.Span),
+        RscpDataType.UChar8 => item.Value.Span[0],
+        RscpDataType.Char8  => (sbyte)item.Value.Span[0],
+        _ => BinaryPrimitives.ReadInt32LittleEndian(item.Value.Span),
+    };
 
-    private static float ReadFloat(RscpDataItem item)
-        => BinaryPrimitives.ReadSingleLittleEndian(item.Value.Span);
+    private static float ReadFloat(RscpDataItem item) => item.DataType switch
+    {
+        RscpDataType.Float32 => BinaryPrimitives.ReadSingleLittleEndian(item.Value.Span),
+        RscpDataType.Double64 => (float)BinaryPrimitives.ReadDoubleLittleEndian(item.Value.Span),
+        RscpDataType.Int32   => BinaryPrimitives.ReadInt32LittleEndian(item.Value.Span),
+        RscpDataType.UChar8  => item.Value.Span[0],
+        RscpDataType.UInt16  => BinaryPrimitives.ReadUInt16LittleEndian(item.Value.Span),
+        _ => BinaryPrimitives.ReadSingleLittleEndian(item.Value.Span),
+    };
 
     private static string ReadString(RscpDataItem item)
         => Encoding.UTF8.GetString(item.Value.Span);

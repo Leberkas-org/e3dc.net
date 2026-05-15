@@ -7,8 +7,6 @@
     <Project Path="test/E3dcConnector.Tests/E3dcConnector.Tests.csproj" />
   </Folder>
   <Folder Name="/samples/">
-    <Project Path="samples/E3dcConnector.Sample/E3dcConnector.Sample.csproj" />
-    <Project Path="samples/E3dcConnector.FlowSample/E3dcConnector.FlowSample.csproj" />
-    <Project Path="samples/E3dcConnector.ActorSample/E3dcConnector.ActorSample.csproj" />
+    <Project Path="samples/E3dcConnector.Dashboard/E3dcConnector.Dashboard.csproj" />
   </Folder>
 </Solution>

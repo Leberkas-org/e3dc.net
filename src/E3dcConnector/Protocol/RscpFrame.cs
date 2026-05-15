@@ -6,8 +6,8 @@ namespace E3dcConnector.Protocol;
 public sealed class RscpFrame
 {
     public const int HeaderSize = 18;
-    public const ushort Magic = 0xE3DC;
-    private const ushort VersionAndCrc = 0x11;
+    public const ushort Magic = 0xDCE3;
+    private const ushort VersionAndCrc = 0x1100;
 
     public DateTimeOffset Timestamp { get; }
     public IReadOnlyList<RscpDataItem> Items { get; }
@@ -49,7 +49,7 @@ public sealed class RscpFrame
             throw new InvalidDataException($"Invalid RSCP magic: 0x{magic:X4}");
 
         var ctrl = BinaryPrimitives.ReadUInt16LittleEndian(data[2..]);
-        var hasCrc = ((ctrl >> 4) & 1) == 1;
+        var hasCrc = ((ctrl >> 12) & 1) == 1;
 
         var seconds = BinaryPrimitives.ReadInt64LittleEndian(data[4..]);
         var nanos = BinaryPrimitives.ReadInt32LittleEndian(data[12..]);

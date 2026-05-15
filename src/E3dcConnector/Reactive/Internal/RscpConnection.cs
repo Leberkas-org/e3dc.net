@@ -18,7 +18,7 @@ public sealed class RscpConnection : IDisposable
     private NetworkStream? _stream;
     private bool _authenticated;
 
-    public RscpConnection(string host, int port, string user, string password, string encryptionKey)
+    public RscpConnection(string host, int port = 5033, string user = "", string password = "", string encryptionKey = "")
     {
         _host = host;
         _port = port;
@@ -41,7 +41,15 @@ public sealed class RscpConnection : IDisposable
         var response = await ReceiveFrameAsync(ct);
         var level = ParseAuthLevel(response);
         if (level == 0)
-            throw new InvalidOperationException("RSCP authentication failed: AUTH_LEVEL_NO_AUTH");
+        {
+            var tags = string.Join(", ", response.Items.Select(i =>
+            {
+                var hex = BitConverter.ToString(i.Value.ToArray()).Replace("-", " ");
+                return $"Tag=0x{i.Tag:X8} Type={i.DataType} Len={i.Value.Length} Val=[{hex}]";
+            }));
+            throw new InvalidOperationException(
+                $"RSCP authentication failed: level={level}. Response items: [{tags}]");
+        }
         _authenticated = true;
         return level;
     }
@@ -70,7 +78,7 @@ public sealed class RscpConnection : IDisposable
             throw new InvalidDataException($"Invalid RSCP magic: 0x{magic:X4}");
 
         var ctrl = BinaryPrimitives.ReadUInt16LittleEndian(decryptedFirst.AsSpan(2));
-        var hasCrc = ((ctrl >> 4) & 1) == 1;
+        var hasCrc = ((ctrl >> 12) & 1) == 1;
         var dataLength = BinaryPrimitives.ReadUInt16LittleEndian(decryptedFirst.AsSpan(16));
         var totalFrameSize = RscpFrame.HeaderSize + dataLength + (hasCrc ? 4 : 0);
         var totalEncryptedSize = (totalFrameSize + blockSize - 1) / blockSize * blockSize;

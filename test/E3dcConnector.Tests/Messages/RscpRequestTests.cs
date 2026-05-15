@@ -1,5 +1,5 @@
+using E3dcConnector.Descriptors;
 using E3dcConnector.Messages;
-using E3dcConnector.Messages.Descriptors;
 using E3dcConnector.Protocol;
 using E3dcConnector.Tags;
 using FluentAssertions;

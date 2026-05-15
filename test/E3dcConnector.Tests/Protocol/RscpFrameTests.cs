@@ -19,21 +19,23 @@ public class RscpFrameTests
     }
 
     [Fact]
-    public void Frame_starts_with_magic_0xE3DC()
+    public void Frame_starts_with_magic_bytes_E3_DC()
     {
         var frame = new RscpFrame(DateTimeOffset.UtcNow, []);
         var bytes = frame.ToBytes();
-        BinaryPrimitives.ReadUInt16LittleEndian(bytes).Should().Be(0xE3DC);
+        bytes[0].Should().Be(0xE3, "first wire byte");
+        bytes[1].Should().Be(0xDC, "second wire byte");
+        BinaryPrimitives.ReadUInt16LittleEndian(bytes).Should().Be(0xDCE3);
     }
 
     [Fact]
-    public void Frame_control_has_version_1_and_crc_bit()
+    public void Frame_control_has_version_1_at_bits_8_11_and_crc_at_bit_12()
     {
         var frame = new RscpFrame(DateTimeOffset.UtcNow, []);
         var bytes = frame.ToBytes();
         var ctrl = BinaryPrimitives.ReadUInt16LittleEndian(bytes.AsSpan(2));
-        (ctrl & 0x0F).Should().Be(0x01, "version should be 1");
-        ((ctrl >> 4) & 0x01).Should().Be(1, "CRC bit should be set");
+        ((ctrl >> 8) & 0x0F).Should().Be(0x01, "version 1 at bits 8-11");
+        ((ctrl >> 12) & 0x01).Should().Be(1, "CRC bit at bit 12");
     }
 
     [Fact]
