@@ -1,20 +1,14 @@
 using Akka.Actor;
 using E3dcConnector.ActorSample;
+using E3dcConnector.Messages.Descriptors;
 using E3dcConnector.Reactive;
 using E3dcConnector.Reactive.Internal;
-using E3dcConnector.Tags;
 
 var system = ActorSystem.Create("e3dc-actors");
 
 var connection = ConnectionActor.Create(
     () => new RscpConnection("192.168.1.100", 5033, "user", "password", "rscp_password"),
-    [
-        RscpTag.EMS_REQ_POWER_PV,
-        RscpTag.EMS_REQ_POWER_BAT,
-        RscpTag.EMS_REQ_POWER_GRID,
-        RscpTag.EMS_REQ_POWER_HOME,
-        RscpTag.EMS_REQ_BAT_SOC,
-    ],
+    [Ems.PowerPv, Ems.PowerBat, Ems.PowerGrid, Ems.PowerHome, Ems.BatSoc],
     new RscpFlowSettings { PollingInterval = TimeSpan.FromSeconds(2) });
 
 var actor = system.ActorOf(connection, "e3dc-connection");

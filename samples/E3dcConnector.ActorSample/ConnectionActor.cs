@@ -6,7 +6,6 @@ using E3dcConnector.Client;
 using E3dcConnector.Messages;
 using E3dcConnector.Reactive;
 using E3dcConnector.Reactive.Internal;
-using E3dcConnector.Tags;
 
 namespace E3dcConnector.ActorSample;
 
@@ -24,14 +23,14 @@ public sealed class ConnectionActor : ReceiveActor
 
     private readonly ILoggingAdapter _log = Context.GetLogger();
     private readonly Func<RscpConnection> _connectionFactory;
-    private readonly RscpTag[] _pollingTags;
+    private readonly TagDescriptor[] _pollingTags;
     private readonly RscpFlowSettings _settings;
     private readonly HashSet<IActorRef> _subscribers = [];
     private ISourceQueueWithComplete<IRscpCommand>? _commandQueue;
 
     public ConnectionActor(
         Func<RscpConnection> connectionFactory,
-        RscpTag[] pollingTags,
+        TagDescriptor[] pollingTags,
         RscpFlowSettings settings)
     {
         _connectionFactory = connectionFactory;
@@ -79,7 +78,7 @@ public sealed class ConnectionActor : ReceiveActor
 
     public static Props Create(
         Func<RscpConnection> connectionFactory,
-        RscpTag[] pollingTags,
+        TagDescriptor[] pollingTags,
         RscpFlowSettings? settings = null) =>
         Props.Create(() => new ConnectionActor(connectionFactory, pollingTags, settings ?? new()));
 }

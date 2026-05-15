@@ -6,7 +6,6 @@ using E3dcConnector.Messages.Commands;
 using E3dcConnector.Messages.Responses;
 using E3dcConnector.Protocol;
 using E3dcConnector.Reactive.Internal;
-using E3dcConnector.Tags;
 
 namespace E3dcConnector.Reactive;
 
@@ -14,7 +13,7 @@ public static class RscpFlow
 {
     public static Flow<IRscpCommand, IRscpMessage, NotUsed> Create(
         Func<RscpConnection> connectionFactory,
-        RscpTag[]? pollingTags = null,
+        TagDescriptor[]? pollingTags = null,
         RscpFlowSettings? settings = null)
     {
         settings ??= new RscpFlowSettings();
@@ -32,7 +31,7 @@ public static class RscpFlow
 
     private static Flow<IRscpCommand, IRscpMessage, NotUsed> CreateInnerFlow(
         Func<RscpConnection> connectionFactory,
-        RscpTag[]? pollingTags,
+        TagDescriptor[]? pollingTags,
         RscpFlowSettings settings)
     {
         var connectionReady = Task.Run(async () =>
@@ -52,10 +51,8 @@ public static class RscpFlow
 
         if (pollingTags is { Length: > 0 })
         {
-            var pollSource = Source.Tick(
-                    TimeSpan.Zero,
-                    settings.PollingInterval,
-                    new ReadTagsCommand(pollingTags) as IRscpCommand);
+            var pollRequest = RscpRequest.Create().Read(pollingTags) as IRscpCommand;
+            var pollSource = Source.Tick(TimeSpan.Zero, settings.PollingInterval, pollRequest);
 
             return Flow.FromGraph(GraphDsl.Create(b =>
             {

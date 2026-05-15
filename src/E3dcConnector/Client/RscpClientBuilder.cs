@@ -1,7 +1,7 @@
 using Akka.Actor;
+using E3dcConnector.Messages;
 using E3dcConnector.Reactive;
 using E3dcConnector.Reactive.Internal;
-using E3dcConnector.Tags;
 
 namespace E3dcConnector.Client;
 
@@ -12,7 +12,7 @@ public sealed class RscpClientBuilder
     private string _user = "";
     private string _password = "";
     private string _encryptionKey = "";
-    private RscpTag[]? _pollingTags;
+    private TagDescriptor[]? _pollingTags;
     private RscpFlowSettings _settings = new();
 
     public RscpClientBuilder Connect(string host, int port = 5033)
@@ -35,7 +35,7 @@ public sealed class RscpClientBuilder
         return this;
     }
 
-    public RscpClientBuilder WithPolling(TimeSpan interval, RscpTag[] tags)
+    public RscpClientBuilder WithPolling(TimeSpan interval, TagDescriptor[] tags)
     {
         _pollingTags = tags;
         _settings = _settings with { PollingInterval = interval };
