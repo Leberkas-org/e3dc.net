@@ -129,6 +129,40 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);height:100vh
 .foot a{color:var(--dim);text-decoration:none;border-bottom:1px solid var(--border);transition:color .2s}
 .foot a:hover{color:var(--green)}
 
+/* ── Tabs ── */
+.tab-bar{display:flex;gap:0;margin-bottom:.75rem;flex-shrink:0;border-bottom:1px solid var(--border)}
+.tab-btn{font-family:var(--mono);font-size:.7rem;color:var(--dim);letter-spacing:.04em;padding:.5rem 1rem;cursor:pointer;border:none;background:none;border-bottom:2px solid transparent;transition:color .2s,border-color .2s}
+.tab-btn:hover{color:var(--text)}
+.tab-btn.active{color:var(--green);border-bottom-color:var(--green)}
+.tab-pane{display:none}
+.tab-pane.active{display:flex;flex-direction:column;flex:1;min-height:0;overflow-y:auto}
+/* ── Explorer ── */
+.exp-tree{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:1rem;flex:1;overflow-y:auto;font-family:var(--mono);font-size:.8rem}
+.exp-send{display:flex;gap:8px;margin-top:.75rem;flex-shrink:0}
+.exp-input{flex:1;background:var(--surface);color:var(--text);border:1px solid var(--border);padding:.5rem .75rem;border-radius:6px;font-family:var(--mono);font-size:.8rem}
+.exp-input::placeholder{color:var(--muted)}
+.exp-btn{background:var(--green);color:#000;border:none;padding:.5rem 1rem;border-radius:6px;font-family:var(--mono);font-size:.8rem;cursor:pointer;font-weight:500}
+.exp-btn:hover{filter:brightness(1.1)}
+.exp-result{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:1rem;margin-top:.5rem;font-family:var(--mono);font-size:.75rem;white-space:pre-wrap;color:var(--dim);max-height:200px;overflow-y:auto}
+/* ── History Tab ── */
+.hist-controls{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:.75rem;flex-shrink:0}
+.hist-input{background:var(--surface);color:var(--text);border:1px solid var(--border);padding:.4rem .6rem;border-radius:6px;font-family:var(--mono);font-size:.8rem}
+.hist-radio{display:flex;gap:0;border:1px solid var(--border);border-radius:6px;overflow:hidden}
+.hist-radio label{font-family:var(--mono);font-size:.75rem;color:var(--dim);padding:.4rem .8rem;cursor:pointer;border-right:1px solid var(--border);transition:all .2s}
+.hist-radio label:last-child{border-right:none}
+.hist-radio input{display:none}
+.hist-radio label:has(input:checked){color:var(--green);background:var(--green-dim)}
+.hist-result{flex:1;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:1rem;font-family:var(--mono);font-size:.75rem;white-space:pre-wrap;color:var(--dim);overflow-y:auto}
+/* ── Request Builder ── */
+.rb-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:.5rem}
+.rb-select{background:var(--surface);color:var(--text);border:1px solid var(--border);padding:.4rem .6rem;border-radius:6px;font-family:var(--mono);font-size:.8rem}
+.rb-chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:.75rem;min-height:2rem}
+.rb-chip{display:inline-flex;align-items:center;gap:4px;background:var(--green-dim);color:var(--green);font-family:var(--mono);font-size:.7rem;padding:.25rem .6rem;border-radius:4px}
+.rb-chip button{background:none;border:none;color:var(--green);cursor:pointer;font-size:.85rem;line-height:1;padding:0}
+.rb-response{flex:1;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:1rem;font-family:var(--mono);font-size:.75rem;white-space:pre-wrap;color:var(--dim);overflow-y:auto}
+/* ── Info bar ── */
+.info-bar{font-family:var(--mono);font-size:.65rem;color:var(--muted);margin-left:.75rem;letter-spacing:.02em}
+
 .reveal{opacity:0;transform:translateY(6px);animation:rv .5s ease forwards}
 @keyframes rv{to{opacity:1;transform:none}}
 </style>
@@ -137,9 +171,23 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);height:100vh
 <div class="shell">
 
 <div class="topbar">
-  <div class="brand"><div class="brand-name">E3DC</div><div class="brand-tag">S10 PRO</div></div>
+  <div class="brand">
+    <div class="brand-name">E3DC</div>
+    <div class="brand-tag">S10 PRO</div>
+    <div class="info-bar" id="sysInfo"></div>
+  </div>
   <div class="conn"><div class="conn-dot" id="dot"></div><span id="connTxt">Offline</span></div>
 </div>
+
+<div class="tab-bar">
+  <button class="tab-btn active" data-tab="dashboard">Dashboard</button>
+  <button class="tab-btn" data-tab="history">History</button>
+  <button class="tab-btn" data-tab="explorer">Explorer</button>
+  <button class="tab-btn" data-tab="builder">Request Builder</button>
+</div>
+
+<!-- ── Dashboard Tab ── -->
+<div class="tab-pane active" id="tab-dashboard">
 
 <!-- ── Schematic ── -->
 <div class="section-label">Energy Flow</div>
@@ -230,14 +278,99 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);height:100vh
   <div class="chart-area"><canvas id="chart"></canvas></div>
 </div>
 
-<div class="foot">e3dc-connector &middot; <a href="/architecture/">RSCP over Akka.Streams</a></div>
+<!-- ── PVI Section ── -->
+<hr class="divider">
+<div class="section-label">Inverter <span style="color:var(--muted)">PVI[0] · 10s</span></div>
+<div class="strip reveal" style="grid-template-columns:repeat(4,1fr)">
+  <div class="scell"><div class="scell-lbl">AC Power</div><div class="scell-v" id="pAcP">-- <span class="u">W</span></div></div>
+  <div class="scell"><div class="scell-lbl">AC Voltage</div><div class="scell-v" id="pAcV">-- <span class="u">V</span></div></div>
+  <div class="scell"><div class="scell-lbl">DC Power</div><div class="scell-v" id="pDcP">-- <span class="u">W</span></div></div>
+  <div class="scell"><div class="scell-lbl">DC Voltage</div><div class="scell-v" id="pDcV">-- <span class="u">V</span></div></div>
+  <div class="scell"><div class="scell-lbl">DC Current</div><div class="scell-v" id="pDcI">-- <span class="u">A</span></div></div>
+  <div class="scell"><div class="scell-lbl">Frequency</div><div class="scell-v" id="pFreq">-- <span class="u">Hz</span></div></div>
 </div>
+
+<!-- ── PM Section ── -->
+<hr class="divider">
+<div class="section-label">Grid Meter <span style="color:var(--muted)">PM[0] · 10s</span></div>
+<div class="strip reveal" style="grid-template-columns:repeat(3,1fr)">
+  <div class="scell"><div class="scell-lbl">Power L1</div><div class="scell-v" id="mPL1">-- <span class="u">W</span></div></div>
+  <div class="scell"><div class="scell-lbl">Power L2</div><div class="scell-v" id="mPL2">-- <span class="u">W</span></div></div>
+  <div class="scell"><div class="scell-lbl">Power L3</div><div class="scell-v" id="mPL3">-- <span class="u">W</span></div></div>
+  <div class="scell"><div class="scell-lbl">Voltage L1</div><div class="scell-v" id="mVL1">-- <span class="u">V</span></div></div>
+  <div class="scell"><div class="scell-lbl">Voltage L2</div><div class="scell-v" id="mVL2">-- <span class="u">V</span></div></div>
+  <div class="scell"><div class="scell-lbl">Voltage L3</div><div class="scell-v" id="mVL3">-- <span class="u">V</span></div></div>
+  <div class="scell"><div class="scell-lbl">Energy L1</div><div class="scell-v" id="mEL1">-- <span class="u">kWh</span></div></div>
+  <div class="scell"><div class="scell-lbl">Energy L2</div><div class="scell-v" id="mEL2">-- <span class="u">kWh</span></div></div>
+  <div class="scell"><div class="scell-lbl">Energy L3</div><div class="scell-v" id="mEL3">-- <span class="u">kWh</span></div></div>
+</div>
+
+<div class="foot">e3dc-connector &middot; <a href="/architecture/">RSCP over Akka.Streams</a></div>
+</div><!-- end tab-dashboard -->
+
+<!-- ── History Tab ── -->
+<div class="tab-pane" id="tab-history">
+  <div class="hist-controls">
+    <input class="hist-input" type="date" id="histDate">
+    <div class="hist-radio">
+      <label><input type="radio" name="histPeriod" value="day" checked>Day</label>
+      <label><input type="radio" name="histPeriod" value="week">Week</label>
+      <label><input type="radio" name="histPeriod" value="month">Month</label>
+      <label><input type="radio" name="histPeriod" value="year">Year</label>
+    </div>
+    <button class="exp-btn" onclick="sendHistoryQuery()">Query</button>
+  </div>
+  <div class="hist-result" id="histResult">Select a date and period, then click Query.</div>
+</div>
+
+<!-- ── Explorer Tab ── -->
+<div class="tab-pane" id="tab-explorer">
+  <div class="exp-tree" id="expTree">Loading live tag dump...</div>
+  <div class="exp-send">
+    <input class="exp-input" id="expInput" placeholder="Tag name e.g. EMS_REQ_GET_POWER_SETTINGS">
+    <button class="exp-btn" onclick="sendCustomTag()">Send</button>
+  </div>
+  <div class="exp-result" id="expResult" style="display:none"></div>
+</div>
+
+<!-- ── Request Builder Tab ── -->
+<div class="tab-pane" id="tab-builder">
+  <div class="rb-row">
+    <select class="rb-select" id="rbNs"><option value="">Namespace...</option></select>
+    <select class="rb-select" id="rbTag"><option value="">Tag...</option></select>
+    <input class="rb-select" id="rbIdx" type="number" min="0" value="0" style="width:5rem;display:none" placeholder="Index">
+    <button class="exp-btn" onclick="rbAdd()">Add</button>
+  </div>
+  <div class="rb-chips" id="rbChips"></div>
+  <div class="rb-row">
+    <button class="exp-btn" onclick="rbSend()">Send</button>
+  </div>
+  <div class="rb-response" id="rbResult">Add tags above, then click Send.</div>
+</div>
+
+</div><!-- end shell -->
 
 <script>
 const $=id=>document.getElementById(id);
 const circ=2*Math.PI*68;
 const hist=[];
 const MAX_H=900;
+var lastData=null;
+
+// Tab switching
+document.querySelectorAll('.tab-btn').forEach(btn=>{
+  btn.onclick=()=>{
+    document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+    document.querySelectorAll('.tab-pane').forEach(p=>p.classList.remove('active'));
+    btn.classList.add('active');
+    $('tab-'+btn.dataset.tab).classList.add('active');
+    if(btn.dataset.tab==='dashboard')setTimeout(drawChart,50);
+    if(btn.dataset.tab==='explorer')buildExpTree();
+    if(btn.dataset.tab==='builder'&&!rbTagData)loadTags();
+  };
+});
+
+function fv(v,d){return v!=null?(typeof v==='number'?v.toFixed(d??1):'--'):'--'}
 
 function fa(w){var a=Math.abs(w);return a>=10000?(a/1000).toFixed(0)+'k':a>=1000?(a/1000).toFixed(1)+'k':a.toString()}
 
@@ -263,6 +396,7 @@ function bdg(id,w,pt,nt,pc,nc){
 }
 
 function update(d){
+  lastData=d;
   $('dot').classList.add('on');
   $('connTxt').textContent=new Date(d.timestamp).toLocaleTimeString();
 
@@ -330,13 +464,32 @@ function update(d){
   $('dAut').innerHTML=(d.autarky??0).toFixed(1)+' <span class="u">%</span>';
   $('dSelf').innerHTML=(d.selfConsumption??0).toFixed(1)+' <span class="u">%</span>';
 
+  // PVI
+  $('pAcP').innerHTML=fv(d.pviAcPowerL1,0)+' <span class="u">W</span>';
+  $('pAcV').innerHTML=fv(d.pviAcVoltageL1,1)+' <span class="u">V</span>';
+  $('pDcP').innerHTML=fv(d.pviDcPower,0)+' <span class="u">W</span>';
+  $('pDcV').innerHTML=fv(d.pviDcVoltage,1)+' <span class="u">V</span>';
+  $('pDcI').innerHTML=fv(d.pviDcCurrent,2)+' <span class="u">A</span>';
+  $('pFreq').innerHTML=fv(d.pviFrequency,2)+' <span class="u">Hz</span>';
+  // PM
+  $('mPL1').innerHTML=fv(d.pmPowerL1,0)+' <span class="u">W</span>';
+  $('mPL2').innerHTML=fv(d.pmPowerL2,0)+' <span class="u">W</span>';
+  $('mPL3').innerHTML=fv(d.pmPowerL3,0)+' <span class="u">W</span>';
+  $('mVL1').innerHTML=fv(d.pmVoltageL1,1)+' <span class="u">V</span>';
+  $('mVL2').innerHTML=fv(d.pmVoltageL2,1)+' <span class="u">V</span>';
+  $('mVL3').innerHTML=fv(d.pmVoltageL3,1)+' <span class="u">V</span>';
+  $('mEL1').innerHTML=fv(d.pmEnergyL1,1)+' <span class="u">kWh</span>';
+  $('mEL2').innerHTML=fv(d.pmEnergyL2,1)+' <span class="u">kWh</span>';
+  $('mEL3').innerHTML=fv(d.pmEnergyL3,1)+' <span class="u">kWh</span>';
+
   hist.push({t:Date.now(),pv:d.pvWatts,bat:d.batteryWatts,grid:d.gridWatts,home:d.homeWatts});
   while(hist.length>MAX_H)hist.shift();
   drawChart();
 }
 
 function drawChart(){
-  var c=$('chart'),ctx=c.getContext('2d'),dpr=devicePixelRatio||1;
+  var c=$('chart');if(!c)return;
+  var ctx=c.getContext('2d'),dpr=devicePixelRatio||1;
   var r=c.parentElement.getBoundingClientRect(),W=r.width,H=Math.max(80,r.height);
   c.width=W*dpr;c.height=H*dpr;c.style.width=W+'px';c.style.height=H+'px';
   ctx.scale(dpr,dpr);ctx.clearRect(0,0,W,H);
@@ -351,6 +504,70 @@ function drawChart(){
   ln('pv','#5CC244',false);ln('bat','#4ea8de',true);ln('grid','#f05545',true);ln('home','#f0a030',false);
 }
 
+// System info
+fetch('/api/info').then(r=>r.json()).then(d=>{
+  if(d.serialNumber)$('sysInfo').textContent='SN: '+d.serialNumber+' · '+d.swRelease+' · '+d.ipAddress;
+}).catch(()=>{});
+
+// Explorer
+function buildExpTree(){
+  if(!lastData)return;
+  fetch('/api/debug').then(r=>r.text()).then(txt=>{$('expTree').textContent=txt}).catch(()=>{});
+}
+function sendCustomTag(){
+  var tag=$('expInput').value.trim();if(!tag)return;
+  $('expResult').style.display='block';$('expResult').textContent='Sending...';
+  fetch('/api/send',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({tags:[tag]})})
+    .then(r=>r.text()).then(t=>{$('expResult').textContent=t}).catch(e=>{$('expResult').textContent='Error: '+e});
+}
+
+// History
+$('histDate').value=new Date().toISOString().split('T')[0];
+function sendHistoryQuery(){
+  var date=$('histDate').value;
+  var period=document.querySelector('input[name=histPeriod]:checked').value;
+  $('histResult').textContent='Querying...';
+  fetch('/api/history-query',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({start:date,period:period})})
+    .then(r=>r.text()).then(t=>{$('histResult').textContent=t}).catch(e=>{$('histResult').textContent='Error: '+e});
+}
+
+// Request Builder
+var rbTagData=null,rbSelected=[];
+var indexedNs=['BAT','PVI','PM','WB'];
+function loadTags(){
+  fetch('/api/tags').then(r=>r.json()).then(d=>{
+    rbTagData=d;
+    var ns=$('rbNs');ns.innerHTML='<option value="">Namespace...</option>';
+    Object.keys(d).sort().forEach(k=>{var o=document.createElement('option');o.value=k;o.textContent=k+' ('+d[k].length+')';ns.appendChild(o)});
+  }).catch(()=>{});
+}
+$('rbNs').onchange=function(){
+  var ns=this.value,sel=$('rbTag');
+  sel.innerHTML='<option value="">Tag...</option>';
+  $('rbIdx').style.display=indexedNs.includes(ns)?'inline-block':'none';
+  if(ns&&rbTagData&&rbTagData[ns]){
+    rbTagData[ns].forEach(t=>{var o=document.createElement('option');o.value=t.name;o.textContent=t.name;sel.appendChild(o)});
+  }
+};
+function rbAdd(){
+  var tag=$('rbTag').value;if(!tag||rbSelected.includes(tag))return;
+  rbSelected.push(tag);rbRenderChips();
+}
+function rbRemove(tag){rbSelected=rbSelected.filter(t=>t!==tag);rbRenderChips()}
+function rbRenderChips(){
+  $('rbChips').innerHTML=rbSelected.map(t=>'<div class="rb-chip">'+t+'<button onclick="rbRemove(\''+t+'\')">&#215;</button></div>').join('');
+}
+function rbSend(){
+  if(!rbSelected.length)return;
+  var ns=$('rbNs').value,idx=$('rbIdx').value;
+  var body={tags:rbSelected};
+  if(indexedNs.includes(ns)){body.deviceNamespace=ns;body.deviceIndex=parseInt(idx)||0}
+  $('rbResult').textContent='Sending...';
+  fetch('/api/send',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)})
+    .then(r=>r.text()).then(t=>{$('rbResult').textContent=t}).catch(e=>{$('rbResult').textContent='Error: '+e});
+}
+
+// Init
 fetch('/api/history').then(r=>r.json()).then(d=>{d.forEach(x=>hist.push({t:new Date(x.timestamp).getTime(),pv:x.pvWatts,bat:x.batteryWatts,grid:x.gridWatts,home:x.homeWatts}));while(hist.length>MAX_H)hist.shift();if(hist.length>1)drawChart()}).catch(()=>{});
 var es=new EventSource('/api/stream');
 es.onmessage=function(e){update(JSON.parse(e.data))};
