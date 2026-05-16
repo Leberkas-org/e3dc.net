@@ -107,10 +107,13 @@ string DumpItems(IReadOnlyList<RscpDataItem> items, int indent = 0)
 }
 
 // ── Response consumer (single reader) ──
+string? lastConsumerError = null;
 _ = Task.Run(async () =>
 {
     await foreach (var msg in messages.ReadAllAsync())
     {
+        try
+        {
         if (msg is not RscpDataResponse data) continue;
 
         lastRawDump = DumpItems(data.Items);
@@ -163,6 +166,11 @@ _ = Task.Run(async () =>
         latestSnapshot = snapshot;
         history.Enqueue(snapshot);
         while (history.Count > maxHistory) history.TryDequeue(out _);
+        }
+        catch (Exception ex)
+        {
+            lastConsumerError = $"{ex.GetType().Name}: {ex.Message}\n{ex.StackTrace}";
+        }
     }
 });
 
@@ -245,6 +253,16 @@ app.MapGet("/api/stream", async (HttpContext ctx) =>
 app.MapGet("/api/history", () => Results.Json(history.ToArray(), jsonOptions));
 
 app.MapGet("/api/debug", () => Results.Text(lastRawDump, "text/plain"));
+
+app.MapGet("/api/diag", () => Results.Text(
+    $"latestSnapshot: {(latestSnapshot is not null ? "SET" : "NULL")}\n" +
+    $"lastEms: {(lastEms is not null ? "SET" : "NULL")}\n" +
+    $"lastBat: {(lastBat is not null ? "SET" : "NULL")}\n" +
+    $"lastPvi: {(lastPvi is not null ? "SET" : "NULL")}\n" +
+    $"lastPm: {(lastPm is not null ? "SET" : "NULL")}\n" +
+    $"consumerCount: {consumerCount}\n" +
+    $"lastError: {lastConsumerError ?? "none"}\n",
+    "text/plain"));
 
 app.MapGet("/api/info", () => cachedDeviceInfo is not null
     ? Results.Json(cachedDeviceInfo, jsonOptions)
