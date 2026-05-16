@@ -6,6 +6,8 @@ using E3dcConnector.Tags;
 using E3dcConnector.Typed.Bat;
 using E3dcConnector.Typed.Ems;
 using E3dcConnector.Typed.Info;
+using E3dcConnector.Typed.Pm;
+using E3dcConnector.Typed.Pvi;
 
 namespace E3dcConnector.Typed;
 
@@ -78,6 +80,55 @@ public static class RscpResponseExtensions
         return found ? new DeviceInfo(serial, prod, sw, ip, mask, gw) : null;
     }
 
+    public static InverterSnapshot? ToInverterSnapshot(this RscpDataResponse response)
+    {
+        float acP1 = 0, acP2 = 0, acP3 = 0;
+        float acV1 = 0, acV2 = 0, acV3 = 0;
+        float dcP = 0, dcV = 0, dcI = 0, freq = 0;
+        var found = false;
+
+        foreach (var item in Flatten(response.Items))
+        {
+            switch ((RscpTag)item.Tag)
+            {
+                case RscpTag.PVI_AC_POWER:     acP1 = ReadFloat(item); found = true; break;
+                case RscpTag.PVI_AC_VOLTAGE:   acV1 = ReadFloat(item); found = true; break;
+                case RscpTag.PVI_DC_POWER:     dcP = ReadFloat(item); found = true; break;
+                case RscpTag.PVI_DC_VOLTAGE:   dcV = ReadFloat(item); found = true; break;
+                case RscpTag.PVI_DC_CURRENT:   dcI = ReadFloat(item); found = true; break;
+                case RscpTag.PVI_AC_FREQUENCY: freq = ReadFloat(item); found = true; break;
+            }
+        }
+
+        return found ? new InverterSnapshot(acP1, acP2, acP3, acV1, acV2, acV3, dcP, dcV, dcI, freq) : null;
+    }
+
+    public static PowerMeterSnapshot? ToPowerMeterSnapshot(this RscpDataResponse response)
+    {
+        float pL1 = 0, pL2 = 0, pL3 = 0;
+        float vL1 = 0, vL2 = 0, vL3 = 0;
+        double eL1 = 0, eL2 = 0, eL3 = 0;
+        var found = false;
+
+        foreach (var item in Flatten(response.Items))
+        {
+            switch ((RscpTag)item.Tag)
+            {
+                case RscpTag.PM_POWER_L1:   pL1 = ReadFloat(item); found = true; break;
+                case RscpTag.PM_POWER_L2:   pL2 = ReadFloat(item); found = true; break;
+                case RscpTag.PM_POWER_L3:   pL3 = ReadFloat(item); found = true; break;
+                case RscpTag.PM_VOLTAGE_L1: vL1 = ReadFloat(item); found = true; break;
+                case RscpTag.PM_VOLTAGE_L2: vL2 = ReadFloat(item); found = true; break;
+                case RscpTag.PM_VOLTAGE_L3: vL3 = ReadFloat(item); found = true; break;
+                case RscpTag.PM_ENERGY_L1:  eL1 = ReadDouble(item); found = true; break;
+                case RscpTag.PM_ENERGY_L2:  eL2 = ReadDouble(item); found = true; break;
+                case RscpTag.PM_ENERGY_L3:  eL3 = ReadDouble(item); found = true; break;
+            }
+        }
+
+        return found ? new PowerMeterSnapshot(pL1, pL2, pL3, vL1, vL2, vL3, eL1, eL2, eL3) : null;
+    }
+
     private static IEnumerable<RscpDataItem> Flatten(IReadOnlyList<RscpDataItem> items)
     {
         foreach (var item in items)
@@ -110,6 +161,14 @@ public static class RscpResponseExtensions
         RscpDataType.UChar8  => item.Value.Span[0],
         RscpDataType.UInt16  => BinaryPrimitives.ReadUInt16LittleEndian(item.Value.Span),
         _ => BinaryPrimitives.ReadSingleLittleEndian(item.Value.Span),
+    };
+
+    private static double ReadDouble(RscpDataItem item) => item.DataType switch
+    {
+        RscpDataType.Double64 => BinaryPrimitives.ReadDoubleLittleEndian(item.Value.Span),
+        RscpDataType.Float32  => BinaryPrimitives.ReadSingleLittleEndian(item.Value.Span),
+        RscpDataType.Int32    => BinaryPrimitives.ReadInt32LittleEndian(item.Value.Span),
+        _ => BinaryPrimitives.ReadDoubleLittleEndian(item.Value.Span),
     };
 
     private static string ReadString(RscpDataItem item)
