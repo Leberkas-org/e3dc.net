@@ -32,6 +32,9 @@ var rscpKey = config["RscpKey"] ?? "";
 var fastInterval = TimeSpan.FromSeconds(int.TryParse(config["FastPollingIntervalSeconds"], out var f) ? f : 2);
 var mediumInterval = TimeSpan.FromSeconds(int.TryParse(config["MediumPollingIntervalSeconds"], out var m) ? m : 10);
 var historyMinutes = int.TryParse(config["HistoryRetentionMinutes"], out var h) ? h : 60;
+var batIndex = int.TryParse(config["BatDeviceIndex"], out var bi) ? bi : 0;
+var pviIndex = int.TryParse(config["PviDeviceIndex"], out var pi) ? pi : 0;
+var pmIndex = int.TryParse(config["PmDeviceIndex"], out var pmi) ? pmi : 6;
 
 // ── Akka + RSCP Flow (no built-in polling — we manage ticks ourselves) ──
 var system = ActorSystem.Create("e3dc-dashboard");
@@ -73,12 +76,12 @@ var fastRequest = RscpRequest.Create()
     as IRscpCommand;
 
 var mediumRequest = RscpRequest.Create()
-    .FromDevice(Bat.Device, 0, b => b
+    .FromDevice(Bat.Device, batIndex, b => b
         .Read(Bat.Rsoc, Bat.ModuleVoltage, Bat.Current, Bat.ChargeCycles))
-    .FromDevice(Pvi.Device, 0, b => b
+    .FromDevice(Pvi.Device, pviIndex, b => b
         .Read(Pvi.AcPower, Pvi.AcVoltage, Pvi.AcFrequency,
               Pvi.DcPower, Pvi.DcVoltage, Pvi.DcCurrent))
-    .FromDevice(Pm.Device, 0, b => b
+    .FromDevice(Pm.Device, pmIndex, b => b
         .Read(Pm.PowerL1, Pm.PowerL2, Pm.PowerL3,
               Pm.VoltageL1, Pm.VoltageL2, Pm.VoltageL3,
               Pm.EnergyL1, Pm.EnergyL2, Pm.EnergyL3))
