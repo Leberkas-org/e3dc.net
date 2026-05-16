@@ -17,7 +17,7 @@ public static class RscpResponseExtensions
         float soc = 0, autarky = 0, selfCons = 0;
         var found = false;
 
-        foreach (var item in response.Items)
+        foreach (var item in Flatten(response.Items))
         {
             switch ((RscpTag)item.Tag)
             {
@@ -41,7 +41,7 @@ public static class RscpResponseExtensions
         int cycles = 0, status = 0, error = 0;
         var found = false;
 
-        foreach (var item in response.Items)
+        foreach (var item in Flatten(response.Items))
         {
             switch ((RscpTag)item.Tag)
             {
@@ -62,7 +62,7 @@ public static class RscpResponseExtensions
         string serial = "", prod = "", sw = "", ip = "", mask = "", gw = "";
         var found = false;
 
-        foreach (var item in response.Items)
+        foreach (var item in Flatten(response.Items))
         {
             switch ((RscpTag)item.Tag)
             {
@@ -76,6 +76,19 @@ public static class RscpResponseExtensions
         }
 
         return found ? new DeviceInfo(serial, prod, sw, ip, mask, gw) : null;
+    }
+
+    private static IEnumerable<RscpDataItem> Flatten(IReadOnlyList<RscpDataItem> items)
+    {
+        foreach (var item in items)
+        {
+            yield return item;
+            if (item.DataType == RscpDataType.Container)
+            {
+                foreach (var child in Flatten(item.ParseContainerChildren()))
+                    yield return child;
+            }
+        }
     }
 
     private static int ReadInt32(RscpDataItem item) => item.DataType switch

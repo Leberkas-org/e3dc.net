@@ -99,8 +99,8 @@ public class RscpRequestTests
         children.Should().HaveCount(3);
         children[0].Tag.Should().Be((uint)RscpTag.PVI_INDEX);
         BitConverter.ToUInt16(children[0].Value.Span).Should().Be(0);
-        children[1].Tag.Should().Be((uint)RscpTag.PVI_AC_POWER);
-        children[2].Tag.Should().Be((uint)RscpTag.PVI_DC_POWER);
+        children[1].Tag.Should().Be((uint)RscpTag.PVI_REQ_AC_POWER);
+        children[2].Tag.Should().Be((uint)RscpTag.PVI_REQ_DC_POWER);
     }
 
     [Fact]

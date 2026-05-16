@@ -12,7 +12,7 @@ public sealed class RscpClientBuilder
     private string _user = "";
     private string _password = "";
     private string _encryptionKey = "";
-    private TagDescriptor[]? _pollingTags;
+    private RscpRequest? _pollingRequest;
     private RscpFlowSettings _settings = new();
 
     public RscpClientBuilder Connect(string host, int port = 5033)
@@ -35,12 +35,15 @@ public sealed class RscpClientBuilder
         return this;
     }
 
-    public RscpClientBuilder WithPolling(TimeSpan interval, TagDescriptor[] tags)
+    public RscpClientBuilder WithPolling(TimeSpan interval, RscpRequest request)
     {
-        _pollingTags = tags;
+        _pollingRequest = request;
         _settings = _settings with { PollingInterval = interval };
         return this;
     }
+
+    public RscpClientBuilder WithPolling(TimeSpan interval, TagDescriptor[] tags)
+        => WithPolling(interval, RscpRequest.Create().Read(tags));
 
     public RscpClientBuilder WithReconnect(TimeSpan min, TimeSpan max)
     {
@@ -55,13 +58,13 @@ public sealed class RscpClientBuilder
         var user = _user;
         var password = _password;
         var encKey = _encryptionKey;
-        var pollingTags = _pollingTags;
+        var pollingRequest = _pollingRequest;
         var settings = _settings;
 
         return new RscpClient(
             () => RscpFlow.Create(
                 () => new RscpConnection(host, port, user, password, encKey),
-                pollingTags,
+                pollingRequest,
                 settings),
             actorSystem);
     }

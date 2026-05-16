@@ -49,13 +49,23 @@ public enum RscpTag : uint
     EMS_REQ_MAX_DISCHARGE_POWER   = 0x01000102,
     EMS_MAX_DISCHARGE_POWER       = 0x01800102,
 
-    // PVI (0x02)
+    // PVI (0x02) — request tags (inside PVI_REQ_DATA container)
     PVI_REQ_DATA                  = 0x02040000,
     PVI_DATA                      = 0x02840000,
     PVI_INDEX                     = 0x02040001,
     PVI_REQ_ON_GRID               = 0x02000001,
-    PVI_ON_GRID                   = 0x02800001,
     PVI_REQ_STATE                 = 0x02000002,
+    PVI_REQ_AC_POWER              = 0x020AC001,
+    PVI_REQ_AC_VOLTAGE            = 0x020AC002,
+    PVI_REQ_AC_CURRENT            = 0x020AC003,
+    PVI_REQ_AC_FREQUENCY          = 0x020AC00A,
+    PVI_REQ_AC_ENERGY_ALL         = 0x020AC006,
+    PVI_REQ_AC_ENERGY_DAY         = 0x020AC008,
+    PVI_REQ_DC_POWER              = 0x020DC001,
+    PVI_REQ_DC_VOLTAGE            = 0x020DC002,
+    PVI_REQ_DC_CURRENT            = 0x020DC003,
+    // PVI (0x02) — response tags
+    PVI_ON_GRID                   = 0x02800001,
     PVI_STATE                     = 0x02800002,
     PVI_AC_POWER                  = 0x028AC001,
     PVI_AC_VOLTAGE                = 0x028AC002,
@@ -68,10 +78,22 @@ public enum RscpTag : uint
     PVI_DC_CURRENT                = 0x028DC003,
     PVI_GENERAL_ERROR             = 0x02FFFFFF,
 
-    // BAT (0x03)
+    // BAT (0x03) — request tags (inside BAT_REQ_DATA container)
     BAT_REQ_DATA                  = 0x03040000,
     BAT_DATA                      = 0x03840000,
     BAT_INDEX                     = 0x03040001,
+    BAT_REQ_RSOC                  = 0x03000001,
+    BAT_REQ_MODULE_VOLTAGE        = 0x03000002,
+    BAT_REQ_CURRENT               = 0x03000003,
+    BAT_REQ_MAX_BAT_VOLTAGE       = 0x03000004,
+    BAT_REQ_MAX_CHARGE_CURRENT    = 0x03000005,
+    BAT_REQ_EOD_VOLTAGE           = 0x03000006,
+    BAT_REQ_MAX_DISCHARGE_CURRENT = 0x03000007,
+    BAT_REQ_CHARGE_CYCLES         = 0x03000008,
+    BAT_REQ_STATUS_CODE           = 0x0300000A,
+    BAT_REQ_ERROR_CODE            = 0x0300000B,
+    BAT_REQ_DCB_COUNT             = 0x0300000D,
+    // BAT (0x03) — response tags
     BAT_RSOC                      = 0x03800001,
     BAT_MODULE_VOLTAGE            = 0x03800002,
     BAT_CURRENT                   = 0x03800003,

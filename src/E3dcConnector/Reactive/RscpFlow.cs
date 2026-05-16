@@ -13,15 +13,14 @@ public static class RscpFlow
 {
     public static Flow<IRscpCommand, IRscpMessage, NotUsed> Create(
         Func<RscpConnection> connectionFactory,
-        TagDescriptor[]? pollingTags = null,
+        RscpRequest? pollingRequest = null,
         RscpFlowSettings? settings = null)
     {
         settings ??= new RscpFlowSettings();
         var capturedSettings = settings;
-        var capturedPollingTags = pollingTags;
 
         return RestartFlow.WithBackoff(
-            () => CreateInnerFlow(connectionFactory, capturedPollingTags, capturedSettings),
+            () => CreateInnerFlow(connectionFactory, pollingRequest, capturedSettings),
             RestartSettings.Create(
                 capturedSettings.MinReconnectBackoff,
                 capturedSettings.MaxReconnectBackoff,
@@ -29,9 +28,15 @@ public static class RscpFlow
             .WithMaxRestarts(capturedSettings.MaxReconnectAttempts, capturedSettings.MinReconnectBackoff));
     }
 
+    public static Flow<IRscpCommand, IRscpMessage, NotUsed> Create(
+        Func<RscpConnection> connectionFactory,
+        TagDescriptor[] pollingTags,
+        RscpFlowSettings? settings = null)
+        => Create(connectionFactory, RscpRequest.Create().Read(pollingTags), settings);
+
     private static Flow<IRscpCommand, IRscpMessage, NotUsed> CreateInnerFlow(
         Func<RscpConnection> connectionFactory,
-        TagDescriptor[]? pollingTags,
+        RscpRequest? pollingRequest,
         RscpFlowSettings settings)
     {
         var connectionReady = Task.Run(async () =>
@@ -49,10 +54,9 @@ public static class RscpFlow
                 return await ProcessCommand(cmd, conn);
             });
 
-        if (pollingTags is { Length: > 0 })
+        if (pollingRequest is not null && pollingRequest.BuildItems().Count > 0)
         {
-            var pollRequest = RscpRequest.Create().Read(pollingTags) as IRscpCommand;
-            var pollSource = Source.Tick(TimeSpan.Zero, settings.PollingInterval, pollRequest);
+            var pollSource = Source.Tick(TimeSpan.Zero, settings.PollingInterval, pollingRequest as IRscpCommand);
 
             return Flow.FromGraph(GraphDsl.Create(b =>
             {
