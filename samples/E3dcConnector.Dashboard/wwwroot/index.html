@@ -16,7 +16,7 @@
   --mono:'DM Mono',monospace;--sans:'Instrument Sans',sans-serif;
 }
 html{font-size:15px}
-body{background:var(--bg);color:var(--text);font-family:var(--sans);height:100vh;overflow:hidden;
+body{background:var(--bg);color:var(--text);font-family:var(--sans);min-height:100vh;
   background-image:
     radial-gradient(ellipse at 15% 10%, rgba(92,194,68,.07) 0%, transparent 50%),
     radial-gradient(ellipse at 85% 90%, rgba(92,194,68,.05) 0%, transparent 45%),
@@ -24,7 +24,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);height:100vh
     url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.02'/%3E%3C/svg%3E")}
 ::selection{background:var(--green);color:#000}
 
-.shell{max-width:1200px;margin:0 auto;padding:1.25rem 2rem 1rem;height:100vh;display:flex;flex-direction:column}
+.shell{max-width:1200px;margin:0 auto;padding:1.25rem 2rem 1rem;min-height:100vh;display:flex;flex-direction:column}
 @media(max-width:640px){.shell{padding:1rem}}
 
 /* ── Topbar ── */
@@ -91,6 +91,21 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);height:100vh
 .vpipe svg{overflow:visible}
 @media(max-width:850px){.vpipe{display:none}}
 
+/* Mobile vertical pipes (hidden on desktop) */
+.mpipe{display:none;text-align:center;padding:.15rem 0}
+.mpipe svg{overflow:visible}
+@media(max-width:850px){
+  .mpipe{display:block}
+  .sch-layout{gap:.25rem}
+  .node-val{font-size:1.2rem}
+  .bat-radial{width:100px;height:100px}
+  .bat-radial circle{stroke-width:4}
+  .bat-soc{font-size:1.2rem}
+  .bat-power{font-size:.75rem}
+  .bat-state{font-size:.55rem}
+  .sch-mobile-grid{display:grid;grid-template-columns:1fr 1fr;gap:.5rem;margin-top:.25rem}
+}
+
 /* ── Tiles ── */
 .tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--border);border-radius:10px;overflow:hidden}
 @media(max-width:850px){.tiles{grid-template-columns:1fr 1fr}}
@@ -115,14 +130,14 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);height:100vh
 .scell-v .u{font-size:.75rem;color:var(--dim);font-weight:400}
 
 /* ── Chart ── */
-.chart-box{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:1rem 1.25rem;flex:1;min-height:0;display:flex;flex-direction:column}
+.chart-box{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:1rem 1.25rem;min-height:200px;display:flex;flex-direction:column}
 .chart-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:.5rem;flex-wrap:wrap;gap:.5rem}
 .chart-leg{display:flex;gap:1.5rem}
 .chart-li{display:flex;align-items:center;gap:.4rem;font-family:var(--mono);font-size:.7rem;color:var(--dim)}
 .chart-li::before{content:'';width:14px;height:2.5px;border-radius:1px;flex-shrink:0}
 .chart-li.cpv::before{background:var(--green)}.chart-li.cbat::before{background:var(--blue)}
 .chart-li.cgrid::before{background:var(--red)}.chart-li.chome::before{background:var(--amber)}
-.chart-area{width:100%;flex:1;min-height:100px;position:relative}
+.chart-area{width:100%;height:180px;position:relative}
 .chart-area canvas{width:100%;height:100%;display:block}
 
 .foot{text-align:center;padding:.5rem 0;flex-shrink:0;font-family:var(--mono);font-size:.7rem;color:var(--muted)}
@@ -202,6 +217,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);height:100vh
 
     <!-- Pipe: Solar → Battery -->
     <div class="pipe"><svg width="70" height="20"><line class="pipe-ln" id="lnPB" x1="0" y1="10" x2="58" y2="10"/><polygon class="pipe-ar" id="arPB" points="58,5 68,10 58,15"/></svg></div>
+    <div class="mpipe"><svg width="20" height="30"><line class="pipe-ln" id="mlnPB" x1="10" y1="0" x2="10" y2="20"/><polygon class="pipe-ar" id="marPB" points="5,20 10,28 15,20"/></svg></div>
 
     <!-- Battery Radial -->
     <div>
@@ -221,6 +237,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);height:100vh
 
     <!-- Pipe: Battery → Home -->
     <div class="pipe"><svg width="70" height="20"><line class="pipe-ln" id="lnBH" x1="0" y1="10" x2="58" y2="10"/><polygon class="pipe-ar" id="arBH" points="58,5 68,10 58,15"/></svg></div>
+    <div class="mpipe"><svg width="20" height="30"><line class="pipe-ln" id="mlnBH" x1="10" y1="0" x2="10" y2="20"/><polygon class="pipe-ar" id="marBH" points="5,20 10,28 15,20"/></svg></div>
 
     <!-- Home -->
     <div class="node">
@@ -230,10 +247,12 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);height:100vh
     </div>
   </div>
 
-  <!-- Vertical pipe: Grid ↕ Battery (centered below battery) -->
+  <!-- Vertical pipe: Grid ↕ Battery (desktop) -->
   <div class="vpipe">
     <svg width="20" height="50"><line class="pipe-ln" id="lnGB" x1="10" y1="0" x2="10" y2="38"/><polygon class="pipe-ar" id="arGB" points="5,38 10,48 15,38"/></svg>
   </div>
+  <!-- Vertical pipe: Grid (mobile) -->
+  <div class="mpipe"><svg width="20" height="30"><line class="pipe-ln" id="mlnGB" x1="10" y1="0" x2="10" y2="20"/><polygon class="pipe-ar" id="marGB" points="5,20 10,28 15,20"/></svg></div>
   <div class="node" style="max-width:200px;margin:0 auto">
     <div class="node-icon" id="iGrid"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M12 2v20M2 12h20M5 5l14 14M19 5L5 19"/></svg></div>
     <div class="node-name">Grid</div>
@@ -388,6 +407,13 @@ function setVPipe(lnId,arId,watts){
     ln.className.baseVal='pipe-ln on';ar.className.baseVal='pipe-ar on';ar.setAttribute('points','5,38 10,48 15,38');
   }
 }
+function setMPipe(lnId,arId,watts){
+  var ln=$(lnId),ar=$(arId);if(!ln)return;
+  var a=Math.abs(watts)>50,pos=watts>50;
+  if(!a){ln.className.baseVal='pipe-ln';ar.className.baseVal='pipe-ar';return}
+  if(pos){ln.className.baseVal='pipe-ln on';ar.className.baseVal='pipe-ar on'}
+  else{ln.className.baseVal='pipe-ln on-r';ar.className.baseVal='pipe-ar on-r'}
+}
 function bdg(id,w,pt,nt,pc,nc){
   var e=$(id);
   if(w>50){e.textContent=pt;e.className='badge '+pc}
@@ -431,10 +457,14 @@ function update(d){
   $('batSt').textContent=batC?'Charging':batD?'Discharging':'Idle';
   $('batSt').className='bat-state '+(batC?'vg':batD?'vr':'vd');
 
-  // Pipes
+  // Pipes (desktop)
   setPipe('lnPB','arPB',d.pvWatts,'r','l');
   setPipe('lnBH','arBH',batD?-1:d.homeWatts>50?1:0,'r','l');
   setVPipe('lnGB','arGB',d.gridWatts);
+  // Pipes (mobile vertical)
+  setMPipe('mlnPB','marPB',d.pvWatts);
+  setMPipe('mlnBH','marBH',batD?-1:d.homeWatts>50?1:0);
+  setMPipe('mlnGB','marGB',d.gridWatts);
 
   // Tiles
   $('tvPv').innerHTML=fa(d.pvWatts)+'<span class="u">W</span>';
