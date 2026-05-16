@@ -13,8 +13,12 @@ using E3dcConnector.Reactive;
 using E3dcConnector.Reactive.Internal;
 using E3dcConnector.Tags;
 using E3dcConnector.Typed;
+using E3dcConnector.Typed.Bat;
 using E3dcConnector.Typed.Db;
+using E3dcConnector.Typed.Ems;
 using E3dcConnector.Typed.Info;
+using E3dcConnector.Typed.Pm;
+using E3dcConnector.Typed.Pvi;
 
 var builder = WebApplication.CreateBuilder(args);
 var app = builder.Build();
@@ -49,6 +53,12 @@ var jsonOptions = new JsonSerializerOptions
 object? latestSnapshot = null;
 string lastRawDump = "no data yet";
 DeviceInfo? cachedDeviceInfo = null;
+
+// Cached snapshots from different polling tiers (merged into latestSnapshot)
+EmsPowerSnapshot? lastEms = null;
+BatterySnapshot? lastBat = null;
+InverterSnapshot? lastPvi = null;
+PowerMeterSnapshot? lastPm = null;
 var maxHistory = (int)(historyMinutes * 60 / fastInterval.TotalSeconds);
 var history = new ConcurrentQueue<object>();
 
@@ -113,35 +123,40 @@ _ = Task.Run(async () =>
         var pvi = data.ToInverterSnapshot();
         var pm = data.ToPowerMeterSnapshot();
 
-        if (ems is null) continue;
+        if (ems is not null) lastEms = ems;
+        if (bat is not null) lastBat = bat;
+        if (pvi is not null) lastPvi = pvi;
+        if (pm is not null) lastPm = pm;
+
+        if (lastEms is null) continue;
 
         var snapshot = new
         {
-            ems.PvWatts,
-            ems.BatteryWatts,
-            ems.GridWatts,
-            ems.HomeWatts,
-            ems.Soc,
-            ems.Autarky,
-            ems.SelfConsumption,
-            BatteryVoltage = bat?.Voltage ?? 0,
-            BatteryCurrent = bat?.Current ?? 0,
-            ChargeCycles = bat?.ChargeCycles ?? 0,
-            PviAcPowerL1 = pvi?.AcPowerL1,
-            PviAcVoltageL1 = pvi?.AcVoltageL1,
-            PviDcPower = pvi?.DcPower,
-            PviDcVoltage = pvi?.DcVoltage,
-            PviDcCurrent = pvi?.DcCurrent,
-            PviFrequency = pvi?.Frequency,
-            PmPowerL1 = pm?.PowerL1,
-            PmPowerL2 = pm?.PowerL2,
-            PmPowerL3 = pm?.PowerL3,
-            PmVoltageL1 = pm?.VoltageL1,
-            PmVoltageL2 = pm?.VoltageL2,
-            PmVoltageL3 = pm?.VoltageL3,
-            PmEnergyL1 = pm?.EnergyL1,
-            PmEnergyL2 = pm?.EnergyL2,
-            PmEnergyL3 = pm?.EnergyL3,
+            lastEms.PvWatts,
+            lastEms.BatteryWatts,
+            lastEms.GridWatts,
+            lastEms.HomeWatts,
+            lastEms.Soc,
+            lastEms.Autarky,
+            lastEms.SelfConsumption,
+            BatteryVoltage = lastBat?.Voltage ?? 0,
+            BatteryCurrent = lastBat?.Current ?? 0,
+            ChargeCycles = lastBat?.ChargeCycles ?? 0,
+            PviAcPowerL1 = lastPvi?.AcPowerL1,
+            PviAcVoltageL1 = lastPvi?.AcVoltageL1,
+            PviDcPower = lastPvi?.DcPower,
+            PviDcVoltage = lastPvi?.DcVoltage,
+            PviDcCurrent = lastPvi?.DcCurrent,
+            PviFrequency = lastPvi?.Frequency,
+            PmPowerL1 = lastPm?.PowerL1,
+            PmPowerL2 = lastPm?.PowerL2,
+            PmPowerL3 = lastPm?.PowerL3,
+            PmVoltageL1 = lastPm?.VoltageL1,
+            PmVoltageL2 = lastPm?.VoltageL2,
+            PmVoltageL3 = lastPm?.VoltageL3,
+            PmEnergyL1 = lastPm?.EnergyL1,
+            PmEnergyL2 = lastPm?.EnergyL2,
+            PmEnergyL3 = lastPm?.EnergyL3,
             Timestamp = DateTimeOffset.UtcNow,
         };
 

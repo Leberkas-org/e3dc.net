@@ -89,19 +89,32 @@ public class RscpResponseExtensionTests
     }
 
     [Fact]
-    public void ToInverterSnapshot_handles_nested_container_response()
+    public void ToInverterSnapshot_handles_container_wrapped_values()
     {
+        // Real E3DC wraps each PVI value in a container: {PVI_INDEX, VALUE_TAG(Float32)}
+        var acPower = RscpDataItem.CreateContainer((uint)RscpTag.PVI_AC_POWER, [
+            new RscpDataItem((uint)RscpTag.PVI_INDEX, RscpDataType.UInt16, BitConverter.GetBytes((ushort)0)),
+            FloatItem((RscpTag)0x02040005, 965f),
+        ]);
+        var dcPower = RscpDataItem.CreateContainer((uint)RscpTag.PVI_DC_POWER, [
+            new RscpDataItem((uint)RscpTag.PVI_INDEX, RscpDataType.UInt16, BitConverter.GetBytes((ushort)0)),
+            FloatItem((RscpTag)0x02040005, 1756f),
+        ]);
+        var freq = RscpDataItem.CreateContainer((uint)RscpTag.PVI_AC_FREQUENCY, [
+            new RscpDataItem((uint)RscpTag.PVI_INDEX, RscpDataType.UInt16, BitConverter.GetBytes((ushort)0)),
+            FloatItem((RscpTag)0x02040005, 50.05f),
+        ]);
+
         var pviData = RscpDataItem.CreateContainer((uint)RscpTag.PVI_DATA, [
-            FloatItem(RscpTag.PVI_AC_POWER, 500f),
-            FloatItem(RscpTag.PVI_DC_POWER, 1500f),
-            FloatItem(RscpTag.PVI_AC_FREQUENCY, 49.98f),
+            new RscpDataItem((uint)RscpTag.PVI_INDEX, RscpDataType.UInt16, BitConverter.GetBytes((ushort)0)),
+            acPower, dcPower, freq,
         ]);
 
         var response = new RscpDataResponse([pviData], "test");
         var snap = response.ToInverterSnapshot();
         snap.Should().NotBeNull();
-        snap!.AcPowerL1.Should().BeApproximately(500f, 0.1f);
-        snap.DcPower.Should().BeApproximately(1500f, 0.1f);
-        snap.Frequency.Should().BeApproximately(49.98f, 0.01f);
+        snap!.AcPowerL1.Should().BeApproximately(965f, 0.1f);
+        snap.DcPower.Should().BeApproximately(1756f, 0.1f);
+        snap.Frequency.Should().BeApproximately(50.05f, 0.01f);
     }
 }

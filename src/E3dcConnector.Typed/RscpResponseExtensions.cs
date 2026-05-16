@@ -89,14 +89,18 @@ public static class RscpResponseExtensions
 
         foreach (var item in Flatten(response.Items))
         {
+            var val = item.DataType == RscpDataType.Container
+                ? ExtractContainerFloat(item)
+                : (float?)ReadFloat(item);
+
             switch ((RscpTag)item.Tag)
             {
-                case RscpTag.PVI_AC_POWER:     acP1 = ReadFloat(item); found = true; break;
-                case RscpTag.PVI_AC_VOLTAGE:   acV1 = ReadFloat(item); found = true; break;
-                case RscpTag.PVI_DC_POWER:     dcP = ReadFloat(item); found = true; break;
-                case RscpTag.PVI_DC_VOLTAGE:   dcV = ReadFloat(item); found = true; break;
-                case RscpTag.PVI_DC_CURRENT:   dcI = ReadFloat(item); found = true; break;
-                case RscpTag.PVI_AC_FREQUENCY: freq = ReadFloat(item); found = true; break;
+                case RscpTag.PVI_AC_POWER:     if (val is not null) { acP1 = val.Value; found = true; } break;
+                case RscpTag.PVI_AC_VOLTAGE:   if (val is not null) { acV1 = val.Value; found = true; } break;
+                case RscpTag.PVI_DC_POWER:     if (val is not null) { dcP = val.Value; found = true; } break;
+                case RscpTag.PVI_DC_VOLTAGE:   if (val is not null) { dcV = val.Value; found = true; } break;
+                case RscpTag.PVI_DC_CURRENT:   if (val is not null) { dcI = val.Value; found = true; } break;
+                case RscpTag.PVI_AC_FREQUENCY: if (val is not null) { freq = val.Value; found = true; } break;
             }
         }
 
@@ -112,21 +116,40 @@ public static class RscpResponseExtensions
 
         foreach (var item in Flatten(response.Items))
         {
+            var fVal = item.DataType == RscpDataType.Container
+                ? ExtractContainerFloat(item)
+                : (float?)ReadFloat(item);
+            var dVal = item.DataType == RscpDataType.Container
+                ? (double?)fVal
+                : (double?)ReadDouble(item);
+
             switch ((RscpTag)item.Tag)
             {
-                case RscpTag.PM_POWER_L1:   pL1 = ReadFloat(item); found = true; break;
-                case RscpTag.PM_POWER_L2:   pL2 = ReadFloat(item); found = true; break;
-                case RscpTag.PM_POWER_L3:   pL3 = ReadFloat(item); found = true; break;
-                case RscpTag.PM_VOLTAGE_L1: vL1 = ReadFloat(item); found = true; break;
-                case RscpTag.PM_VOLTAGE_L2: vL2 = ReadFloat(item); found = true; break;
-                case RscpTag.PM_VOLTAGE_L3: vL3 = ReadFloat(item); found = true; break;
-                case RscpTag.PM_ENERGY_L1:  eL1 = ReadDouble(item); found = true; break;
-                case RscpTag.PM_ENERGY_L2:  eL2 = ReadDouble(item); found = true; break;
-                case RscpTag.PM_ENERGY_L3:  eL3 = ReadDouble(item); found = true; break;
+                case RscpTag.PM_POWER_L1:   if (fVal is not null) { pL1 = fVal.Value; found = true; } break;
+                case RscpTag.PM_POWER_L2:   if (fVal is not null) { pL2 = fVal.Value; found = true; } break;
+                case RscpTag.PM_POWER_L3:   if (fVal is not null) { pL3 = fVal.Value; found = true; } break;
+                case RscpTag.PM_VOLTAGE_L1: if (fVal is not null) { vL1 = fVal.Value; found = true; } break;
+                case RscpTag.PM_VOLTAGE_L2: if (fVal is not null) { vL2 = fVal.Value; found = true; } break;
+                case RscpTag.PM_VOLTAGE_L3: if (fVal is not null) { vL3 = fVal.Value; found = true; } break;
+                case RscpTag.PM_ENERGY_L1:  if (dVal is not null) { eL1 = dVal.Value; found = true; } break;
+                case RscpTag.PM_ENERGY_L2:  if (dVal is not null) { eL2 = dVal.Value; found = true; } break;
+                case RscpTag.PM_ENERGY_L3:  if (dVal is not null) { eL3 = dVal.Value; found = true; } break;
             }
         }
 
         return found ? new PowerMeterSnapshot(pL1, pL2, pL3, vL1, vL2, vL3, eL1, eL2, eL3) : null;
+    }
+
+    // PVI/PM response tags wrap values in containers: {INDEX, VALUE(Float32)}
+    private static float? ExtractContainerFloat(RscpDataItem container)
+    {
+        foreach (var child in container.ParseContainerChildren())
+        {
+            if (child.DataType is RscpDataType.Float32 or RscpDataType.Double64
+                or RscpDataType.Int32 or RscpDataType.UInt32)
+                return ReadFloat(child);
+        }
+        return null;
     }
 
     private static IEnumerable<RscpDataItem> Flatten(IReadOnlyList<RscpDataItem> items)
