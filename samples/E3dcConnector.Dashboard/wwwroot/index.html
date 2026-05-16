@@ -261,6 +261,21 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);min-height:1
   </div>
 </div>
 
+<!-- ── Chart ── -->
+<hr class="divider">
+<div class="chart-box reveal">
+  <div class="chart-head">
+    <div class="section-label" style="margin:0">Power History</div>
+    <div class="chart-leg">
+      <div class="chart-li cpv">Solar</div>
+      <div class="chart-li cbat">Battery</div>
+      <div class="chart-li cgrid">Grid</div>
+      <div class="chart-li chome">Home</div>
+    </div>
+  </div>
+  <div class="chart-area"><canvas id="chart"></canvas></div>
+</div>
+
 <!-- ── Tiles ── -->
 <hr class="divider">
 <div class="section-label">Live Power</div>
@@ -280,21 +295,6 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);min-height:1
   <div class="scell"><div class="scell-lbl">Current</div><div class="scell-v" id="dCurr">-- <span class="u">A</span></div></div>
   <div class="scell"><div class="scell-lbl">Autarky</div><div class="scell-v vl" id="dAut">-- <span class="u">%</span></div></div>
   <div class="scell"><div class="scell-lbl">Self-Consumption</div><div class="scell-v vl" id="dSelf">-- <span class="u">%</span></div></div>
-</div>
-
-<!-- ── Chart ── -->
-<hr class="divider">
-<div class="chart-box reveal">
-  <div class="chart-head">
-    <div class="section-label" style="margin:0">Power History</div>
-    <div class="chart-leg">
-      <div class="chart-li cpv">Solar</div>
-      <div class="chart-li cbat">Battery</div>
-      <div class="chart-li cgrid">Grid</div>
-      <div class="chart-li chome">Home</div>
-    </div>
-  </div>
-  <div class="chart-area"><canvas id="chart"></canvas></div>
 </div>
 
 <!-- ── PVI Section ── -->
