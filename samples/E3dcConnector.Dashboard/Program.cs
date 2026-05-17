@@ -29,20 +29,19 @@ builder.Services.AddSingleton(new ActorRegistry
     Polling = pollingActor,
 });
 builder.Services.AddControllers().AddNewtonsoftJson();
-builder.Services.AddOpenApiDocument(c =>
-{
-    c.Title = "E3DC Dashboard API";
-    c.Version = "v1";
-});
 
 var app = builder.Build();
 
-// ── Swagger UI ──
-app.UseOpenApi(c => c.Path = "/swagger/{documentName}/swagger.json");
+// ── Swagger UI serving the static openapi.yaml ──
 app.UseSwaggerUi(c =>
 {
     c.Path = "/swagger";
-    c.DocumentPath = "/swagger/{documentName}/swagger.json";
+    c.DocumentPath = "/openapi.yaml";
+});
+app.MapGet("/openapi.yaml", async ctx =>
+{
+    ctx.Response.ContentType = "application/yaml";
+    await ctx.Response.SendFileAsync(Path.Combine(app.Environment.ContentRootPath, "openapi.yaml"));
 });
 
 // ── Static files + fallback ──
