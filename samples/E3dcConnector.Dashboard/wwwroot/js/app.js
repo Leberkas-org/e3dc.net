@@ -26,6 +26,7 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
     btn.classList.add('active');
     $('tab-' + btn.dataset.tab).classList.add('active');
     if (btn.dataset.tab === 'dashboard') setTimeout(drawChart, 50);
+    if (btn.dataset.tab === 'history') sendHistoryQuery();
     if (btn.dataset.tab === 'explorer') buildExpTree();
     if (btn.dataset.tab === 'builder' && !isTagDataLoaded()) loadTags();
   };
