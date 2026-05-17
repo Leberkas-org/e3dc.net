@@ -217,6 +217,53 @@ components:
           type: number
           format: double
           nullable: true
+        dcdcBatteryCurrent:
+          type: number
+          format: float
+          nullable: true
+        dcdcBatteryVoltage:
+          type: number
+          format: float
+          nullable: true
+        dcdcBatteryPower:
+          type: number
+          format: float
+          nullable: true
+        epIsReadyForSwitch:
+          type: boolean
+          nullable: true
+        epIsGridConnected:
+          type: boolean
+          nullable: true
+        epIsIslandGrid:
+          type: boolean
+          nullable: true
+        wbEnergyAll:
+          type: number
+          format: double
+          nullable: true
+        wbEnergySolar:
+          type: number
+          format: double
+          nullable: true
+        wbStatus:
+          type: integer
+          nullable: true
+        wbMode:
+          type: integer
+          nullable: true
+        wbPowerL1:
+          type: number
+          format: float
+          nullable: true
+        wbPowerL2:
+          type: number
+          format: float
+          nullable: true
+        wbPowerL3:
+          type: number
+          format: float
+          nullable: true
         timestamp:
           type: string
           format: date-time
@@ -249,7 +296,7 @@ components:
 
     DiagnosticInfo:
       type: object
-      required: [hasSnapshot, hasEms, hasBat, hasPvi, hasPm, consumerCount]
+      required: [hasSnapshot, hasEms, hasBat, hasPvi, hasPm, hasDcdc, hasEp, hasWb, consumerCount]
       properties:
         hasSnapshot:
           type: boolean
@@ -260,6 +307,12 @@ components:
         hasPvi:
           type: boolean
         hasPm:
+          type: boolean
+        hasDcdc:
+          type: boolean
+        hasEp:
+          type: boolean
+        hasWb:
           type: boolean
         consumerCount:
           type: integer

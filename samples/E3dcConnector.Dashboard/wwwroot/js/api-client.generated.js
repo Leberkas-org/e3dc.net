@@ -371,6 +371,19 @@ export class DashboardSnapshot implements IDashboardSnapshot {
     pmEnergyL1?: number | undefined;
     pmEnergyL2?: number | undefined;
     pmEnergyL3?: number | undefined;
+    dcdcBatteryCurrent?: number | undefined;
+    dcdcBatteryVoltage?: number | undefined;
+    dcdcBatteryPower?: number | undefined;
+    epIsReadyForSwitch?: boolean | undefined;
+    epIsGridConnected?: boolean | undefined;
+    epIsIslandGrid?: boolean | undefined;
+    wbEnergyAll?: number | undefined;
+    wbEnergySolar?: number | undefined;
+    wbStatus?: number | undefined;
+    wbMode?: number | undefined;
+    wbPowerL1?: number | undefined;
+    wbPowerL2?: number | undefined;
+    wbPowerL3?: number | undefined;
     timestamp!: Date;
 
     [key: string]: any;
@@ -415,6 +428,19 @@ export class DashboardSnapshot implements IDashboardSnapshot {
             this.pmEnergyL1 = _data["pmEnergyL1"];
             this.pmEnergyL2 = _data["pmEnergyL2"];
             this.pmEnergyL3 = _data["pmEnergyL3"];
+            this.dcdcBatteryCurrent = _data["dcdcBatteryCurrent"];
+            this.dcdcBatteryVoltage = _data["dcdcBatteryVoltage"];
+            this.dcdcBatteryPower = _data["dcdcBatteryPower"];
+            this.epIsReadyForSwitch = _data["epIsReadyForSwitch"];
+            this.epIsGridConnected = _data["epIsGridConnected"];
+            this.epIsIslandGrid = _data["epIsIslandGrid"];
+            this.wbEnergyAll = _data["wbEnergyAll"];
+            this.wbEnergySolar = _data["wbEnergySolar"];
+            this.wbStatus = _data["wbStatus"];
+            this.wbMode = _data["wbMode"];
+            this.wbPowerL1 = _data["wbPowerL1"];
+            this.wbPowerL2 = _data["wbPowerL2"];
+            this.wbPowerL3 = _data["wbPowerL3"];
             this.timestamp = _data["timestamp"] ? new Date(_data["timestamp"].toString()) : undefined as any;
         }
     }
@@ -457,6 +483,19 @@ export class DashboardSnapshot implements IDashboardSnapshot {
         data["pmEnergyL1"] = this.pmEnergyL1;
         data["pmEnergyL2"] = this.pmEnergyL2;
         data["pmEnergyL3"] = this.pmEnergyL3;
+        data["dcdcBatteryCurrent"] = this.dcdcBatteryCurrent;
+        data["dcdcBatteryVoltage"] = this.dcdcBatteryVoltage;
+        data["dcdcBatteryPower"] = this.dcdcBatteryPower;
+        data["epIsReadyForSwitch"] = this.epIsReadyForSwitch;
+        data["epIsGridConnected"] = this.epIsGridConnected;
+        data["epIsIslandGrid"] = this.epIsIslandGrid;
+        data["wbEnergyAll"] = this.wbEnergyAll;
+        data["wbEnergySolar"] = this.wbEnergySolar;
+        data["wbStatus"] = this.wbStatus;
+        data["wbMode"] = this.wbMode;
+        data["wbPowerL1"] = this.wbPowerL1;
+        data["wbPowerL2"] = this.wbPowerL2;
+        data["wbPowerL3"] = this.wbPowerL3;
         data["timestamp"] = this.timestamp ? this.timestamp.toISOString() : undefined as any;
         return data;
     }
@@ -488,6 +527,19 @@ export interface IDashboardSnapshot {
     pmEnergyL1?: number | undefined;
     pmEnergyL2?: number | undefined;
     pmEnergyL3?: number | undefined;
+    dcdcBatteryCurrent?: number | undefined;
+    dcdcBatteryVoltage?: number | undefined;
+    dcdcBatteryPower?: number | undefined;
+    epIsReadyForSwitch?: boolean | undefined;
+    epIsGridConnected?: boolean | undefined;
+    epIsIslandGrid?: boolean | undefined;
+    wbEnergyAll?: number | undefined;
+    wbEnergySolar?: number | undefined;
+    wbStatus?: number | undefined;
+    wbMode?: number | undefined;
+    wbPowerL1?: number | undefined;
+    wbPowerL2?: number | undefined;
+    wbPowerL3?: number | undefined;
     timestamp: Date;
 
     [key: string]: any;
@@ -619,6 +671,9 @@ export class DiagnosticInfo implements IDiagnosticInfo {
     hasBat!: boolean;
     hasPvi!: boolean;
     hasPm!: boolean;
+    hasDcdc!: boolean;
+    hasEp!: boolean;
+    hasWb!: boolean;
     consumerCount!: number;
     lastError?: string | undefined;
 
@@ -644,6 +699,9 @@ export class DiagnosticInfo implements IDiagnosticInfo {
             this.hasBat = _data["hasBat"];
             this.hasPvi = _data["hasPvi"];
             this.hasPm = _data["hasPm"];
+            this.hasDcdc = _data["hasDcdc"];
+            this.hasEp = _data["hasEp"];
+            this.hasWb = _data["hasWb"];
             this.consumerCount = _data["consumerCount"];
             this.lastError = _data["lastError"];
         }
@@ -667,6 +725,9 @@ export class DiagnosticInfo implements IDiagnosticInfo {
         data["hasBat"] = this.hasBat;
         data["hasPvi"] = this.hasPvi;
         data["hasPm"] = this.hasPm;
+        data["hasDcdc"] = this.hasDcdc;
+        data["hasEp"] = this.hasEp;
+        data["hasWb"] = this.hasWb;
         data["consumerCount"] = this.consumerCount;
         data["lastError"] = this.lastError;
         return data;
@@ -679,6 +740,9 @@ export interface IDiagnosticInfo {
     hasBat: boolean;
     hasPvi: boolean;
     hasPm: boolean;
+    hasDcdc: boolean;
+    hasEp: boolean;
+    hasWb: boolean;
     consumerCount: number;
     lastError?: string | undefined;
 

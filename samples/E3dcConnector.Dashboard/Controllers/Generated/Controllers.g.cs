@@ -167,6 +167,45 @@ namespace E3dcConnector.Dashboard.Controllers.Generated
         [Newtonsoft.Json.JsonProperty("pmEnergyL3", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public double? PmEnergyL3 { get; set; }
 
+        [Newtonsoft.Json.JsonProperty("dcdcBatteryCurrent", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
+        public float? DcdcBatteryCurrent { get; set; }
+
+        [Newtonsoft.Json.JsonProperty("dcdcBatteryVoltage", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
+        public float? DcdcBatteryVoltage { get; set; }
+
+        [Newtonsoft.Json.JsonProperty("dcdcBatteryPower", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
+        public float? DcdcBatteryPower { get; set; }
+
+        [Newtonsoft.Json.JsonProperty("epIsReadyForSwitch", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
+        public bool? EpIsReadyForSwitch { get; set; }
+
+        [Newtonsoft.Json.JsonProperty("epIsGridConnected", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
+        public bool? EpIsGridConnected { get; set; }
+
+        [Newtonsoft.Json.JsonProperty("epIsIslandGrid", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
+        public bool? EpIsIslandGrid { get; set; }
+
+        [Newtonsoft.Json.JsonProperty("wbEnergyAll", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
+        public double? WbEnergyAll { get; set; }
+
+        [Newtonsoft.Json.JsonProperty("wbEnergySolar", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
+        public double? WbEnergySolar { get; set; }
+
+        [Newtonsoft.Json.JsonProperty("wbStatus", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
+        public int? WbStatus { get; set; }
+
+        [Newtonsoft.Json.JsonProperty("wbMode", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
+        public int? WbMode { get; set; }
+
+        [Newtonsoft.Json.JsonProperty("wbPowerL1", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
+        public float? WbPowerL1 { get; set; }
+
+        [Newtonsoft.Json.JsonProperty("wbPowerL2", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
+        public float? WbPowerL2 { get; set; }
+
+        [Newtonsoft.Json.JsonProperty("wbPowerL3", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
+        public float? WbPowerL3 { get; set; }
+
         [Newtonsoft.Json.JsonProperty("timestamp", Required = Newtonsoft.Json.Required.Always)]
         [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
         public System.DateTimeOffset Timestamp { get; set; }
@@ -262,6 +301,15 @@ namespace E3dcConnector.Dashboard.Controllers.Generated
 
         [Newtonsoft.Json.JsonProperty("hasPm", Required = Newtonsoft.Json.Required.Always)]
         public bool HasPm { get; set; }
+
+        [Newtonsoft.Json.JsonProperty("hasDcdc", Required = Newtonsoft.Json.Required.Always)]
+        public bool HasDcdc { get; set; }
+
+        [Newtonsoft.Json.JsonProperty("hasEp", Required = Newtonsoft.Json.Required.Always)]
+        public bool HasEp { get; set; }
+
+        [Newtonsoft.Json.JsonProperty("hasWb", Required = Newtonsoft.Json.Required.Always)]
+        public bool HasWb { get; set; }
 
         [Newtonsoft.Json.JsonProperty("consumerCount", Required = Newtonsoft.Json.Required.Always)]
         public int ConsumerCount { get; set; }
