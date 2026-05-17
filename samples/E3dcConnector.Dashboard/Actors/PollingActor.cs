@@ -57,9 +57,9 @@ public sealed class PollingActor : ReceiveActor, IWithTimers
                 .Read(Pm.PowerL1, Pm.PowerL2, Pm.PowerL3,
                       Pm.VoltageL1, Pm.VoltageL2, Pm.VoltageL3,
                       Pm.EnergyL1, Pm.EnergyL2, Pm.EnergyL3))
-            .FromDevice(Dcdc.Device, 0, b => b
+            .FromDevice(Dcdc.Device, _options.DcdcDeviceIndex, b => b
                 .Read(Dcdc.IBat, Dcdc.UBat, Dcdc.PBat))
-            .FromDevice(Wb.Device, 0, b => b
+            .FromDevice(Wb.Device, _options.WbDeviceIndex, b => b
                 .Read(Wb.EnergyAll, Wb.EnergySolar, Wb.Status, Wb.Mode,
                       Wb.PmPowerL1, Wb.PmPowerL2, Wb.PmPowerL3)) as IRscpCommand;
 

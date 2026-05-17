@@ -15,4 +15,6 @@ public sealed class E3dcOptions
     public int BatDeviceIndex { get; init; } = 0;
     public int PviDeviceIndex { get; init; } = 0;
     public int PmDeviceIndex { get; init; } = 6;
+    public int DcdcDeviceIndex { get; init; } = 0;
+    public int WbDeviceIndex { get; init; } = 0;
 }
