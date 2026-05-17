@@ -659,20 +659,18 @@ function sendHistoryQuery(){
       drawHistChart(d.dataPoints, d.period, d.start);
     }).catch(e=>{$('histTitle').textContent='Energy History';$('histResult').style.display='block';$('histResult').textContent='Error: '+e});
 }
-function histLabel(idx, period, startStr){
+function histLabel(i, period, startStr){
   var s=new Date(startStr+'T00:00:00');
-  var days=['Mo','Tu','We','Th','Fr','Sa','Su'];
-  var months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-  if(period==='day'){var h=Math.floor(idx*15/60),m=(idx*15)%60;return (h<10?'0':'')+h+':'+(m<10?'0':'')+m}
-  if(period==='week'){var d=new Date(s);d.setDate(d.getDate()+idx-1);return days[d.getDay()===0?6:d.getDay()-1]}
-  if(period==='month')return ''+idx;
-  if(period==='year')return months[idx-1]||'';
-  return ''+idx;
+  var dayNames=['Mo','Tu','We','Th','Fr','Sa','Su'];
+  var monthNames=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  if(period==='day'){var h=Math.floor(i*15/60),m=(i*15)%60;return (h<10?'0':'')+h+':'+(m<10?'0':'')+m}
+  if(period==='week'){var d=new Date(s);d.setDate(d.getDate()+i);return dayNames[d.getDay()===0?6:d.getDay()-1]}
+  if(period==='month'){var d=new Date(s);d.setDate(d.getDate()+i);return ''+d.getDate()}
+  if(period==='year'){var d=new Date(s);d.setMonth(d.getMonth()+i);return monthNames[d.getMonth()]}
+  return ''+i;
 }
 function drawHistChart(pts,period,startStr){
   var c=$('histChart');if(!c)return;
-  // Deduplicate by index (E3DC sometimes returns duplicate last point)
-  var seen={};pts=pts.filter(function(p){if(seen[p.index])return false;seen[p.index]=true;return true});
   var ctx=c.getContext('2d'),dpr=devicePixelRatio||1;
   var r=c.parentElement.getBoundingClientRect(),W=r.width,H=250;
   c.width=W*dpr;c.height=H*dpr;c.style.width=W+'px';c.style.height=H+'px';
@@ -698,7 +696,7 @@ function drawHistChart(pts,period,startStr){
     // X label
     if(n<=31||(i%Math.ceil(n/12)===0)){
       ctx.fillStyle='#6b7280';ctx.font='9px DM Mono';ctx.textAlign='center';
-      ctx.fillText(histLabel(pts[i].index,period,startStr),x+gw/2,H-p.b+14);
+      ctx.fillText(histLabel(i,period,startStr),x+gw/2,H-p.b+14);
     }
   }
 }
