@@ -160,7 +160,13 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);min-height:1
 .exp-btn:hover{filter:brightness(1.1)}
 .exp-result{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:1rem;margin-top:.5rem;font-family:var(--mono);font-size:.75rem;white-space:pre-wrap;color:var(--dim);max-height:200px;overflow-y:auto}
 /* ── History Tab ── */
-.hist-controls{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:.75rem;flex-shrink:0}
+.hist-controls{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-bottom:.75rem;flex-shrink:0;position:relative}
+.hist-nav{background:var(--surface);color:var(--text);border:1px solid var(--border);width:32px;height:32px;border-radius:6px;cursor:pointer;font-size:1rem;display:flex;align-items:center;justify-content:center;transition:border-color .2s}
+.hist-nav:hover{border-color:var(--green);color:var(--green)}
+.hist-date-btn{background:var(--surface);color:var(--text);border:1px solid var(--border);padding:.4rem .8rem;border-radius:6px;font-family:var(--mono);font-size:.8rem;cursor:pointer;min-width:110px;transition:border-color .2s}
+.hist-date-btn:hover{border-color:var(--green);color:var(--green)}
+.hist-quick{background:none;color:var(--dim);border:1px solid var(--border);padding:.3rem .6rem;border-radius:6px;font-family:var(--mono);font-size:.7rem;cursor:pointer;transition:color .2s,border-color .2s}
+.hist-quick:hover{color:var(--green);border-color:var(--green)}
 .hist-input{background:var(--surface);color:var(--text);border:1px solid var(--border);padding:.4rem .6rem;border-radius:6px;font-family:var(--mono);font-size:.8rem}
 .hist-radio{display:flex;gap:0;border:1px solid var(--border);border-radius:6px;overflow:hidden}
 .hist-radio label{font-family:var(--mono);font-size:.75rem;color:var(--dim);padding:.4rem .8rem;cursor:pointer;border-right:1px solid var(--border);transition:all .2s}
@@ -330,7 +336,12 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);min-height:1
 <!-- ── History Tab ── -->
 <div class="tab-pane" id="tab-history">
   <div class="hist-controls">
-    <input class="hist-input" type="date" id="histDate">
+    <input type="date" id="histDate" style="position:absolute;opacity:0;width:0;height:0;pointer-events:none">
+    <button class="hist-nav" onclick="histStep(-1)" title="Previous">&larr;</button>
+    <button class="hist-date-btn" id="histDateBtn" onclick="$('histDate').showPicker()"></button>
+    <button class="hist-nav" onclick="histStep(1)" title="Next">&rarr;</button>
+    <button class="hist-quick" onclick="histGoTo(0)">Today</button>
+    <button class="hist-quick" onclick="histGoTo(-1)">Yesterday</button>
     <div class="hist-radio">
       <label><input type="radio" name="histPeriod" value="day" checked>Day</label>
       <label><input type="radio" name="histPeriod" value="week">Week</label>
@@ -564,7 +575,24 @@ function sendCustomTag(){
 }
 
 // History
-$('histDate').value=new Date().toISOString().split('T')[0];
+function fmtDate(d){return d.toISOString().split('T')[0]}
+function showDate(){var d=$('histDate').value;$('histDateBtn').textContent=d||'Pick date'}
+function histStep(dir){
+  var d=new Date($('histDate').value+'T00:00:00');
+  var period=document.querySelector('input[name=histPeriod]:checked').value;
+  if(period==='day')d.setDate(d.getDate()+dir);
+  else if(period==='week')d.setDate(d.getDate()+dir*7);
+  else if(period==='month')d.setMonth(d.getMonth()+dir);
+  else if(period==='year')d.setFullYear(d.getFullYear()+dir);
+  $('histDate').value=fmtDate(d);showDate();sendHistoryQuery();
+}
+function histGoTo(offset){
+  var d=new Date();d.setDate(d.getDate()+offset);
+  $('histDate').value=fmtDate(d);showDate();sendHistoryQuery();
+}
+$('histDate').value=fmtDate(new Date());
+$('histDate').addEventListener('change',function(){showDate()});
+showDate();
 function sendHistoryQuery(){
   var date=$('histDate').value;
   var period=document.querySelector('input[name=histPeriod]:checked').value;
