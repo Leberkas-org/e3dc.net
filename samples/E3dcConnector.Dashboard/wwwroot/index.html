@@ -157,7 +157,20 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);min-height:1
 .tab-pane{display:none}
 .tab-pane.active{display:flex;flex-direction:column;flex:1;min-height:0;overflow-y:auto}
 /* ── Explorer ── */
-.exp-tree{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:1rem;flex:1;overflow-y:auto;font-family:var(--mono);font-size:.8rem}
+.exp-tree{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:.75rem 1rem;flex:1;overflow-y:auto;font-family:var(--mono);font-size:.8rem}
+.exp-ns-hdr{cursor:pointer;color:var(--green);font-size:.75rem;letter-spacing:.04em;padding:.3rem 0;user-select:none;display:flex;align-items:center;gap:.4rem}
+.exp-ns-hdr:hover{text-decoration:underline}
+.exp-ns-hdr::before{content:'▶';font-size:.6rem;transition:transform .2s;display:inline-block;width:1em}
+.exp-ns-hdr.open::before{transform:rotate(90deg)}
+.exp-ns-items{display:none;padding-left:.5rem;border-left:1px solid var(--border);margin-left:.3rem;margin-bottom:.3rem}
+.exp-ns-items.open{display:block}
+.exp-item{display:flex;align-items:baseline;gap:.5rem;padding:.15rem 0;font-size:.75rem;line-height:1.4}
+.exp-item-tag{color:var(--text);min-width:180px;flex-shrink:0}
+.exp-item-type{color:var(--dim);min-width:60px;flex-shrink:0;font-size:.65rem}
+.exp-item-val{color:var(--amber);font-weight:500}
+.exp-item-hex{color:var(--muted);font-size:.65rem;margin-left:auto;display:none}
+.exp-item:hover .exp-item-hex{display:inline}
+.exp-item-container{margin-left:1rem;border-left:1px solid var(--border);padding-left:.5rem}
 .exp-send{display:flex;gap:8px;margin-top:.75rem;flex-shrink:0}
 .exp-input{flex:1;background:var(--surface);color:var(--text);border:1px solid var(--border);padding:.5rem .75rem;border-radius:6px;font-family:var(--mono);font-size:.8rem}
 .exp-input::placeholder{color:var(--muted)}
@@ -395,12 +408,17 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);min-height:1
 
 <!-- ── Explorer Tab ── -->
 <div class="tab-pane" id="tab-explorer">
-  <div class="exp-tree" id="expTree">Loading live tag dump...</div>
+  <div class="section-label" style="display:flex;justify-content:space-between;align-items:center">
+    Live Tags <span id="expTick" style="color:var(--muted);font-size:.6rem"></span>
+  </div>
+  <div class="exp-tree" id="expTree">Waiting for data...</div>
+  <hr class="divider">
+  <div class="section-label">Send Custom Request</div>
   <div class="exp-send">
-    <input class="exp-input" id="expInput" placeholder="Tag name e.g. EMS_REQ_GET_POWER_SETTINGS">
+    <input class="exp-input" id="expInput" placeholder="Tag name (EMS_REQ_POWER_PV) or hex (0x01000001)">
     <button class="exp-btn" onclick="sendCustomTag()">Send</button>
   </div>
-  <div class="exp-result" id="expResult" style="display:none"></div>
+  <div class="exp-tree" id="expResult" style="display:none;margin-top:.5rem"></div>
 </div>
 
 <!-- ── Request Builder Tab ── -->
@@ -566,6 +584,7 @@ function update(d){
   hist.push({t:Date.now(),pv:d.pvWatts,bat:d.batteryWatts,grid:d.gridWatts,home:d.homeWatts});
   while(hist.length>MAX_H)hist.shift();
   drawChart();
+  if($('tab-explorer').classList.contains('active'))buildExpTree();
 }
 
 function drawChart(){
@@ -590,16 +609,58 @@ fetch('/api/info').then(r=>r.json()).then(d=>{
   if(d.serialNumber)$('sysInfo').textContent='SN: '+d.serialNumber+' · '+d.swRelease+' · '+d.ipAddress;
 }).catch(()=>{});
 
-// Explorer
+// Explorer — live tree
+var expNsState={};
 function buildExpTree(){
   if(!lastData)return;
-  fetch('/api/debug').then(r=>r.text()).then(txt=>{$('expTree').textContent=txt}).catch(()=>{});
+  var groups={
+    'EMS':{pvWatts:'EMS_POWER_PV',batteryWatts:'EMS_POWER_BAT',gridWatts:'EMS_POWER_GRID',homeWatts:'EMS_POWER_HOME',soc:'EMS_BAT_SOC',autarky:'EMS_AUTARKY',selfConsumption:'EMS_SELF_CONSUMPTION'},
+    'BAT[0]':{batteryVoltage:'BAT_MODULE_VOLTAGE',batteryCurrent:'BAT_CURRENT',chargeCycles:'BAT_CHARGE_CYCLES'},
+    'PVI[0]':{pviAcPowerL1:'PVI_AC_POWER',pviAcVoltageL1:'PVI_AC_VOLTAGE',pviDcPower:'PVI_DC_POWER',pviDcVoltage:'PVI_DC_VOLTAGE',pviDcCurrent:'PVI_DC_CURRENT',pviFrequency:'PVI_AC_FREQUENCY'},
+    'PM[0]':{pmPowerL1:'PM_POWER_L1',pmPowerL2:'PM_POWER_L2',pmPowerL3:'PM_POWER_L3',pmVoltageL1:'PM_VOLTAGE_L1',pmVoltageL2:'PM_VOLTAGE_L2',pmVoltageL3:'PM_VOLTAGE_L3',pmEnergyL1:'PM_ENERGY_L1',pmEnergyL2:'PM_ENERGY_L2',pmEnergyL3:'PM_ENERGY_L3'}
+  };
+  var units={pvWatts:'W',batteryWatts:'W',gridWatts:'W',homeWatts:'W',soc:'%',autarky:'%',selfConsumption:'%',batteryVoltage:'V',batteryCurrent:'A',chargeCycles:'',pviAcPowerL1:'W',pviAcVoltageL1:'V',pviDcPower:'W',pviDcVoltage:'V',pviDcCurrent:'A',pviFrequency:'Hz',pmPowerL1:'W',pmPowerL2:'W',pmPowerL3:'W',pmVoltageL1:'V',pmVoltageL2:'V',pmVoltageL3:'V',pmEnergyL1:'Wh',pmEnergyL2:'Wh',pmEnergyL3:'Wh'};
+  var html='';
+  for(var ns in groups){
+    var isOpen=expNsState[ns]!==false;
+    html+='<div class="exp-ns-hdr'+(isOpen?' open':'')+'" onclick="toggleExpNs(this,\''+ns+'\')">'+ns+'</div>';
+    html+='<div class="exp-ns-items'+(isOpen?' open':'')+'">';
+    var tags=groups[ns];
+    for(var key in tags){
+      var v=lastData[key];
+      var fv=v!=null?(typeof v==='number'?(Number.isInteger(v)?v:v.toFixed(2)):''+v):'—';
+      var u=units[key]||'';
+      html+='<div class="exp-item"><span class="exp-item-tag">'+tags[key]+'</span><span class="exp-item-val">'+fv+(u?' '+u:'')+'</span></div>';
+    }
+    html+='</div>';
+  }
+  $('expTree').innerHTML=html;
+  $('expTick').textContent='updated '+new Date().toLocaleTimeString();
+}
+function toggleExpNs(el,ns){expNsState[ns]=!el.classList.contains('open');buildExpTree()}
+
+function renderItemTree(items,depth){
+  var html='';
+  for(var i=0;i<items.length;i++){
+    var it=items[i];
+    html+='<div class="exp-item" style="padding-left:'+(depth*1)+'rem">';
+    html+='<span class="exp-item-tag">'+it.tag+'</span>';
+    html+='<span class="exp-item-type">'+it.type+'</span>';
+    if(it.value!=null)html+='<span class="exp-item-val">'+it.value+'</span>';
+    html+='<span class="exp-item-hex">'+it.hex+'</span>';
+    html+='</div>';
+    if(it.children)html+=renderItemTree(it.children,depth+1);
+  }
+  return html;
 }
 function sendCustomTag(){
   var tag=$('expInput').value.trim();if(!tag)return;
-  $('expResult').style.display='block';$('expResult').textContent='Sending...';
+  $('expResult').style.display='block';$('expResult').innerHTML='<span style="color:var(--dim)">Sending...</span>';
   fetch('/api/send',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({tags:[tag]})})
-    .then(r=>r.text()).then(t=>{$('expResult').textContent=t}).catch(e=>{$('expResult').textContent='Error: '+e});
+    .then(r=>r.json()).then(d=>{
+      if(d.error){$('expResult').innerHTML='<span style="color:var(--red)">'+d.error+'</span>';return}
+      $('expResult').innerHTML=renderItemTree(d.items||[],0);
+    }).catch(e=>{$('expResult').innerHTML='<span style="color:var(--red)">Error: '+e+'</span>'});
 }
 
 // History

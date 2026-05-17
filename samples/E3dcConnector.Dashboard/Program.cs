@@ -394,7 +394,7 @@ app.MapPost("/api/send", async (HttpContext ctx) =>
     if (response is null)
         return Results.Json(new { error = "Timeout waiting for response" });
 
-    return Results.Text(DumpItems(response.Items), "text/plain");
+    return Results.Json(new { items = ItemsToJson(response.Items) }, jsonOptions);
 });
 
 app.MapPost("/api/history-query", async (HttpContext ctx) =>
@@ -466,6 +466,41 @@ app.MapFallback(async ctx =>
     ctx.Response.ContentType = "text/html";
     await ctx.Response.SendFileAsync(Path.Combine(app.Environment.WebRootPath, "index.html"));
 });
+
+List<object> ItemsToJson(IReadOnlyList<RscpDataItem> items)
+{
+    var result = new List<object>();
+    foreach (var item in items)
+    {
+        var tagName = Enum.IsDefined(typeof(RscpTag), item.Tag)
+            ? ((RscpTag)item.Tag).ToString()
+            : $"0x{item.Tag:X8}";
+        var hex = BitConverter.ToString(item.Value.ToArray()).Replace("-", " ");
+        object? parsed = item.DataType switch
+        {
+            RscpDataType.Bool    => item.Value.Span[0] != 0,
+            RscpDataType.UChar8  => item.Value.Span[0],
+            RscpDataType.Char8   => (sbyte)item.Value.Span[0],
+            RscpDataType.Int16   => System.Buffers.Binary.BinaryPrimitives.ReadInt16LittleEndian(item.Value.Span),
+            RscpDataType.UInt16  => System.Buffers.Binary.BinaryPrimitives.ReadUInt16LittleEndian(item.Value.Span),
+            RscpDataType.Int32   => System.Buffers.Binary.BinaryPrimitives.ReadInt32LittleEndian(item.Value.Span),
+            RscpDataType.UInt32  => System.Buffers.Binary.BinaryPrimitives.ReadUInt32LittleEndian(item.Value.Span),
+            RscpDataType.Float32 => System.Buffers.Binary.BinaryPrimitives.ReadSingleLittleEndian(item.Value.Span),
+            RscpDataType.Double64 => System.Buffers.Binary.BinaryPrimitives.ReadDoubleLittleEndian(item.Value.Span),
+            RscpDataType.CString => System.Text.Encoding.UTF8.GetString(item.Value.Span),
+            RscpDataType.Timestamp when item.Value.Length >= 12 => item.ToTimestamp().ToString("o"),
+            _ => null,
+        };
+        var entry = new Dictionary<string, object?> {
+            ["tag"] = tagName, ["type"] = item.DataType.ToString(), ["hex"] = hex
+        };
+        if (parsed is not null) entry["value"] = parsed;
+        if (item.DataType == RscpDataType.Container)
+            entry["children"] = ItemsToJson(item.ParseContainerChildren());
+        result.Add(entry);
+    }
+    return result;
+}
 
 RscpDataItem MakeUInt64(uint tag, ulong value)
 {
