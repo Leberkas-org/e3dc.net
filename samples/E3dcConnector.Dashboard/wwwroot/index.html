@@ -336,7 +336,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);min-height:1
 <!-- ── History Tab ── -->
 <div class="tab-pane" id="tab-history">
   <div class="hist-controls">
-    <input type="date" id="histDate" style="position:absolute;opacity:0;width:0;height:0;pointer-events:none">
+    <input type="date" id="histDate" style="position:fixed;top:-100px;left:-100px;opacity:0">
     <button class="hist-nav" onclick="histStep(-1)" title="Previous">&larr;</button>
     <button class="hist-date-btn" id="histDateBtn" onclick="$('histDate').showPicker()"></button>
     <button class="hist-nav" onclick="histStep(1)" title="Next">&rarr;</button>
@@ -575,8 +575,19 @@ function sendCustomTag(){
 }
 
 // History
-function fmtDate(d){return d.toISOString().split('T')[0]}
-function showDate(){var d=$('histDate').value;$('histDateBtn').textContent=d||'Pick date'}
+function fmtDate(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
+function showDate(){
+  var d=$('histDate').value,period=document.querySelector('input[name=histPeriod]:checked').value;
+  if(!d){$('histDateBtn').textContent='Pick date';return}
+  var dt=new Date(d+'T00:00:00');
+  var days=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  var months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  if(period==='day')$('histDateBtn').textContent=days[dt.getDay()]+', '+dt.getDate()+' '+months[dt.getMonth()]+' '+dt.getFullYear();
+  else if(period==='week'){var end=new Date(dt);end.setDate(end.getDate()+6);$('histDateBtn').textContent=dt.getDate()+' '+months[dt.getMonth()]+' — '+end.getDate()+' '+months[end.getMonth()]}
+  else if(period==='month')$('histDateBtn').textContent=months[dt.getMonth()]+' '+dt.getFullYear();
+  else if(period==='year')$('histDateBtn').textContent=''+dt.getFullYear();
+  else $('histDateBtn').textContent=d;
+}
 function histStep(dir){
   var d=new Date($('histDate').value+'T00:00:00');
   var period=document.querySelector('input[name=histPeriod]:checked').value;
@@ -584,14 +595,17 @@ function histStep(dir){
   else if(period==='week')d.setDate(d.getDate()+dir*7);
   else if(period==='month')d.setMonth(d.getMonth()+dir);
   else if(period==='year')d.setFullYear(d.getFullYear()+dir);
-  $('histDate').value=fmtDate(d);showDate();sendHistoryQuery();
+  $('histDate').value=fmtDate(d);showDate();histQueryDebounced();
 }
 function histGoTo(offset){
   var d=new Date();d.setDate(d.getDate()+offset);
-  $('histDate').value=fmtDate(d);showDate();sendHistoryQuery();
+  $('histDate').value=fmtDate(d);showDate();histQueryDebounced();
 }
+var histDebounceTimer=null;
+function histQueryDebounced(){clearTimeout(histDebounceTimer);histDebounceTimer=setTimeout(sendHistoryQuery,400)}
 $('histDate').value=fmtDate(new Date());
-$('histDate').addEventListener('change',function(){showDate()});
+$('histDate').addEventListener('change',function(){showDate();histQueryDebounced()});
+document.querySelectorAll('input[name=histPeriod]').forEach(function(r){r.addEventListener('change',function(){showDate();histQueryDebounced()})});
 showDate();
 function sendHistoryQuery(){
   var date=$('histDate').value;
