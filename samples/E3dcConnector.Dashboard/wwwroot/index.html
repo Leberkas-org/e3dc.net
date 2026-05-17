@@ -6,6 +6,11 @@
 <title>E3DC Energy Monitor</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Instrument+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/themes/dark.css">
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/plugins/monthSelect/index.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/plugins/monthSelect/style.css">
 <style>
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
 :root{
@@ -163,8 +168,13 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);min-height:1
 .hist-controls{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-bottom:.75rem;flex-shrink:0;position:relative}
 .hist-nav{background:var(--surface);color:var(--text);border:1px solid var(--border);width:32px;height:32px;border-radius:6px;cursor:pointer;font-size:1rem;display:flex;align-items:center;justify-content:center;transition:border-color .2s}
 .hist-nav:hover{border-color:var(--green);color:var(--green)}
-.hist-date-btn{background:var(--surface);color:var(--text);border:1px solid var(--border);padding:.4rem .8rem;border-radius:6px;font-family:var(--mono);font-size:.8rem;cursor:pointer;min-width:110px;transition:border-color .2s}
-.hist-date-btn:hover{border-color:var(--green);color:var(--green)}
+.hist-date-btn{background:var(--surface);color:var(--text);border:1px solid var(--border);padding:.4rem .8rem;border-radius:6px;font-family:var(--mono);font-size:.8rem;cursor:pointer;min-width:130px;text-align:center;transition:border-color .2s}
+.hist-date-btn:hover,.hist-date-btn:focus{border-color:var(--green);color:var(--green);outline:none}
+.flatpickr-calendar{font-family:var(--mono)!important;border-color:var(--border)!important}
+.flatpickr-calendar .flatpickr-day.selected{background:var(--green)!important;border-color:var(--green)!important}
+.flatpickr-calendar .flatpickr-day:hover{background:var(--green-dim)!important}
+.flatpickr-calendar .flatpickr-monthSelect-month.selected{background:var(--green)!important}
+.flatpickr-calendar .flatpickr-monthSelect-month:hover{background:var(--green-dim)!important}
 .hist-quick{background:none;color:var(--dim);border:1px solid var(--border);padding:.3rem .6rem;border-radius:6px;font-family:var(--mono);font-size:.7rem;cursor:pointer;transition:color .2s,border-color .2s}
 .hist-quick:hover{color:var(--green);border-color:var(--green)}
 .hist-input{background:var(--surface);color:var(--text);border:1px solid var(--border);padding:.4rem .6rem;border-radius:6px;font-family:var(--mono);font-size:.8rem}
@@ -336,9 +346,8 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);min-height:1
 <!-- ── History Tab ── -->
 <div class="tab-pane" id="tab-history">
   <div class="hist-controls">
-    <input type="date" id="histDate" style="position:fixed;top:-100px;left:-100px;opacity:0">
     <button class="hist-nav" onclick="histStep(-1)" title="Previous">&larr;</button>
-    <button class="hist-date-btn" id="histDateBtn" onclick="$('histDate').showPicker()"></button>
+    <input class="hist-date-btn" id="histDate" readonly placeholder="Pick date">
     <button class="hist-nav" onclick="histStep(1)" title="Next">&rarr;</button>
     <button class="hist-quick" onclick="histGoTo(0)">Today</button>
     <button class="hist-quick" onclick="histGoTo(-1)">Yesterday</button>
@@ -576,40 +585,52 @@ function sendCustomTag(){
 
 // History
 function fmtDate(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
-function showDate(){
-  var d=$('histDate').value,period=document.querySelector('input[name=histPeriod]:checked').value;
-  if(!d){$('histDateBtn').textContent='Pick date';return}
-  var dt=new Date(d+'T00:00:00');
-  var days=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
-  var months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-  if(period==='day')$('histDateBtn').textContent=days[dt.getDay()]+', '+dt.getDate()+' '+months[dt.getMonth()]+' '+dt.getFullYear();
-  else if(period==='week'){var end=new Date(dt);end.setDate(end.getDate()+6);$('histDateBtn').textContent=dt.getDate()+' '+months[dt.getMonth()]+' — '+end.getDate()+' '+months[end.getMonth()]}
-  else if(period==='month')$('histDateBtn').textContent=months[dt.getMonth()]+' '+dt.getFullYear();
-  else if(period==='year')$('histDateBtn').textContent=''+dt.getFullYear();
-  else $('histDateBtn').textContent=d;
+function getHistPeriod(){return document.querySelector('input[name=histPeriod]:checked').value}
+var histDebounceTimer=null;
+function histQueryDebounced(){clearTimeout(histDebounceTimer);histDebounceTimer=setTimeout(sendHistoryQuery,400)}
+
+var histPicker=flatpickr('#histDate',{
+  theme:'dark',dateFormat:'Y-m-d',defaultDate:new Date(),disableMobile:true,
+  onChange:function(){histQueryDebounced()}
+});
+
+function rebuildPicker(){
+  var period=getHistPeriod();
+  var current=histPicker.selectedDates[0]||new Date();
+  histPicker.destroy();
+  var opts={theme:'dark',defaultDate:current,disableMobile:true,onChange:function(){histQueryDebounced()}};
+  if(period==='month'){
+    opts.plugins=[new monthSelectPlugin({shorthand:false,dateFormat:'Y-m-d',altFormat:'F Y'})];
+  } else if(period==='year'){
+    opts.dateFormat='Y';
+    opts.altInput=true;opts.altFormat='Y';
+    // Year-only: we'll just use the default picker and show year
+  } else {
+    opts.dateFormat='Y-m-d';
+  }
+  histPicker=flatpickr('#histDate',opts);
 }
+
 function histStep(dir){
-  var d=new Date($('histDate').value+'T00:00:00');
-  var period=document.querySelector('input[name=histPeriod]:checked').value;
+  var d=histPicker.selectedDates[0]||new Date();
+  var period=getHistPeriod();
   if(period==='day')d.setDate(d.getDate()+dir);
   else if(period==='week')d.setDate(d.getDate()+dir*7);
   else if(period==='month')d.setMonth(d.getMonth()+dir);
   else if(period==='year')d.setFullYear(d.getFullYear()+dir);
-  $('histDate').value=fmtDate(d);showDate();histQueryDebounced();
+  histPicker.setDate(d,false);histQueryDebounced();
 }
 function histGoTo(offset){
   var d=new Date();d.setDate(d.getDate()+offset);
-  $('histDate').value=fmtDate(d);showDate();histQueryDebounced();
+  histPicker.setDate(d,false);histQueryDebounced();
 }
-var histDebounceTimer=null;
-function histQueryDebounced(){clearTimeout(histDebounceTimer);histDebounceTimer=setTimeout(sendHistoryQuery,400)}
-$('histDate').value=fmtDate(new Date());
-$('histDate').addEventListener('change',function(){showDate();histQueryDebounced()});
-document.querySelectorAll('input[name=histPeriod]').forEach(function(r){r.addEventListener('change',function(){showDate();histQueryDebounced()})});
-showDate();
+document.querySelectorAll('input[name=histPeriod]').forEach(function(r){
+  r.addEventListener('change',function(){rebuildPicker();histQueryDebounced()})
+});
 function sendHistoryQuery(){
-  var date=$('histDate').value;
-  var period=document.querySelector('input[name=histPeriod]:checked').value;
+  var sel=histPicker.selectedDates[0];
+  var date=sel?fmtDate(sel):fmtDate(new Date());
+  var period=getHistPeriod();
   $('histTitle').textContent='Loading...';
   $('histResult').style.display='none';
   fetch('/api/history-query',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({start:date,period:period})})
@@ -624,9 +645,9 @@ function histLabel(idx, period, startStr){
   var days=['Mo','Tu','We','Th','Fr','Sa','Su'];
   var months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
   if(period==='day'){var h=Math.floor(idx*15/60),m=(idx*15)%60;return (h<10?'0':'')+h+':'+(m<10?'0':'')+m}
-  if(period==='week'){var d=new Date(s);d.setDate(d.getDate()+idx);return days[d.getDay()===0?6:d.getDay()-1]}
-  if(period==='month')return ''+(idx+1);
-  if(period==='year')return months[idx]||'';
+  if(period==='week'){var d=new Date(s);d.setDate(d.getDate()+idx-1);return days[d.getDay()===0?6:d.getDay()-1]}
+  if(period==='month')return ''+idx;
+  if(period==='year')return months[idx-1]||'';
   return ''+idx;
 }
 function drawHistChart(pts,period,startStr){
