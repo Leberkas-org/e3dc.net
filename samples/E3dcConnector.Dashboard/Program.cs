@@ -19,6 +19,7 @@ using E3dcConnector.Typed.Ems;
 using E3dcConnector.Typed.Info;
 using E3dcConnector.Typed.Pm;
 using E3dcConnector.Typed.Pvi;
+// NSwag-generated types will be used once controllers are wired up
 
 var builder = WebApplication.CreateBuilder(args);
 var app = builder.Build();
