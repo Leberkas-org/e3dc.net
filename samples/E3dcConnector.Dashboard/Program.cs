@@ -404,12 +404,24 @@ app.MapPost("/api/history-query", async (HttpContext ctx) =>
     if (body is null)
         return Results.BadRequest(new { error = "Invalid request" });
 
-    var start = body.Start ?? DateTimeOffset.UtcNow.Date;
-    var (reqTag, span, interval) = (body.Period?.ToUpperInvariant()) switch
+    var raw = body.Start ?? DateTimeOffset.UtcNow.Date;
+    var period = body.Period?.ToUpperInvariant() ?? "DAY";
+
+    // Snap start to beginning of period
+    var start = period switch
+    {
+        "WEEK"  => raw.AddDays(-(((int)raw.DayOfWeek + 6) % 7)), // Monday
+        "MONTH" => new DateTimeOffset(raw.Year, raw.Month, 1, 0, 0, 0, raw.Offset),
+        "YEAR"  => new DateTimeOffset(raw.Year, 1, 1, 0, 0, 0, raw.Offset),
+        _       => raw,
+    };
+
+    var daysInMonth = DateTime.DaysInMonth(start.Year, start.Month);
+    var (reqTag, span, interval) = period switch
     {
         "WEEK"  => (RscpTag.DB_REQ_HISTORY_DATA_WEEK,  TimeSpan.FromDays(7), TimeSpan.FromDays(1)),
-        "MONTH" => (RscpTag.DB_REQ_HISTORY_DATA_MONTH, TimeSpan.FromDays(31), TimeSpan.FromDays(1)),
-        "YEAR"  => (RscpTag.DB_REQ_HISTORY_DATA_YEAR,  TimeSpan.FromDays(366), TimeSpan.FromDays(31)),
+        "MONTH" => (RscpTag.DB_REQ_HISTORY_DATA_MONTH, TimeSpan.FromDays(daysInMonth), TimeSpan.FromDays(1)),
+        "YEAR"  => (RscpTag.DB_REQ_HISTORY_DATA_YEAR,  TimeSpan.FromDays(365), TimeSpan.FromDays(31)),
         _       => (RscpTag.DB_REQ_HISTORY_DATA_DAY,   TimeSpan.FromDays(1), TimeSpan.FromMinutes(15)),
     };
 
@@ -446,7 +458,7 @@ app.MapPost("/api/history-query", async (HttpContext ctx) =>
         }
     }
 
-    return Results.Json(new { period = body.Period ?? "Day", start = start.ToString("yyyy-MM-dd"), summary, dataPoints }, jsonOptions);
+    return Results.Json(new { period = body.Period ?? "Day", start = start.ToString("yyyy-MM-dd"), summary, dataPoints, count = dataPoints.Count }, jsonOptions);
 });
 
 app.MapFallback(async ctx =>
