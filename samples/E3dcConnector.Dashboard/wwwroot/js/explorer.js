@@ -1,38 +1,230 @@
-// Explorer tab: live tag tree
+// Explorer tab: live raw RSCP item tree + on-demand fetch per namespace
 
-import { $, state } from './utils.js';
+import { $ } from './utils.js';
 
-var expNsState = {};
+var nsState = {};
+var onDemandResults = {};
+var lastItemKeys = '';
+
+var fetchableNs = {
+  'EMS':  { tags: ['EMS_REQ_POWER_PV','EMS_REQ_POWER_BAT','EMS_REQ_POWER_GRID','EMS_REQ_POWER_HOME','EMS_REQ_POWER_ADD','EMS_REQ_BAT_SOC','EMS_REQ_AUTARKY','EMS_REQ_SELF_CONSUMPTION','EMS_REQ_MODE','EMS_REQ_MAX_CHARGE_POWER','EMS_REQ_MAX_DISCHARGE_POWER','EMS_REQ_EMERGENCY_POWER_STATUS'] },
+  'BAT':  { tags: ['BAT_REQ_RSOC','BAT_REQ_MODULE_VOLTAGE','BAT_REQ_CURRENT','BAT_REQ_CHARGE_CYCLES','BAT_REQ_STATUS_CODE','BAT_REQ_ERROR_CODE','BAT_REQ_DCB_COUNT'], device: 'BAT', idx: 0 },
+  'PVI':  { tags: ['PVI_REQ_ON_GRID','PVI_REQ_STATE','PVI_REQ_AC_POWER','PVI_REQ_AC_VOLTAGE','PVI_REQ_AC_CURRENT','PVI_REQ_AC_FREQUENCY','PVI_REQ_DC_POWER','PVI_REQ_DC_VOLTAGE','PVI_REQ_DC_CURRENT'], device: 'PVI', idx: 0 },
+  'PM':   { tags: ['PM_REQ_POWER_L1','PM_REQ_POWER_L2','PM_REQ_POWER_L3','PM_REQ_VOLTAGE_L1','PM_REQ_VOLTAGE_L2','PM_REQ_VOLTAGE_L3','PM_REQ_ENERGY_L1','PM_REQ_ENERGY_L2','PM_REQ_ENERGY_L3'], device: 'PM', idx: 0 },
+  'DCDC': { tags: ['DCDC_REQ_I_BAT','DCDC_REQ_U_BAT','DCDC_REQ_P_BAT'], device: 'DCDC', idx: 0 },
+  'WB':   { tags: ['WB_REQ_ENERGY_ALL','WB_REQ_ENERGY_SOLAR','WB_REQ_STATUS','WB_REQ_ERROR_CODE','WB_REQ_MODE','WB_REQ_PM_POWER_L1','WB_REQ_PM_POWER_L2','WB_REQ_PM_POWER_L3'], device: 'WB', idx: 0 },
+  'INFO': { tags: ['INFO_REQ_SERIAL_NUMBER','INFO_REQ_PRODUCTION_DATE','INFO_REQ_SW_RELEASE','INFO_REQ_IP_ADDRESS','INFO_REQ_SUBNET_MASK','INFO_REQ_GATEWAY','INFO_REQ_DNS','INFO_REQ_TIME','INFO_REQ_TIME_ZONE'] },
+  'EP':   { tags: ['EP_REQ_IS_READY_FOR_SWITCH','EP_REQ_IS_GRID_CONNECTED','EP_REQ_IS_ISLAND_GRID'] },
+  'HA':   { tags: ['HA_REQ_DATAPOINT_LIST','HA_REQ_ACTUATOR_STATES'] },
+  'SYS':  { tags: [], noFetch: true },
+  'UM':   { tags: ['UM_REQ_UPDATE_STATUS'] },
+};
 
 export function buildExpTree() {
-  if (!state.lastData) return;
-  var d = state.lastData;
-  var groups = {
-    'EMS': { pvWatts: 'EMS_POWER_PV', batteryWatts: 'EMS_POWER_BAT', gridWatts: 'EMS_POWER_GRID', homeWatts: 'EMS_POWER_HOME', soc: 'EMS_BAT_SOC', autarky: 'EMS_AUTARKY', selfConsumption: 'EMS_SELF_CONSUMPTION' },
-    'BAT[0]': { batteryVoltage: 'BAT_MODULE_VOLTAGE', batteryCurrent: 'BAT_CURRENT', chargeCycles: 'BAT_CHARGE_CYCLES' },
-    'PVI[0]': { pviAcPowerL1: 'PVI_AC_POWER', pviAcVoltageL1: 'PVI_AC_VOLTAGE', pviDcPower: 'PVI_DC_POWER', pviDcVoltage: 'PVI_DC_VOLTAGE', pviDcCurrent: 'PVI_DC_CURRENT', pviFrequency: 'PVI_AC_FREQUENCY' },
-    'PM[0]': { pmPowerL1: 'PM_POWER_L1', pmPowerL2: 'PM_POWER_L2', pmPowerL3: 'PM_POWER_L3', pmVoltageL1: 'PM_VOLTAGE_L1', pmVoltageL2: 'PM_VOLTAGE_L2', pmVoltageL3: 'PM_VOLTAGE_L3', pmEnergyL1: 'PM_ENERGY_L1', pmEnergyL2: 'PM_ENERGY_L2', pmEnergyL3: 'PM_ENERGY_L3' },
-    'DCDC[0]': { dcdcBatteryCurrent: 'DCDC_I_BAT', dcdcBatteryVoltage: 'DCDC_U_BAT', dcdcBatteryPower: 'DCDC_P_BAT' },
-    'EP': { epIsReadyForSwitch: 'EP_IS_READY_FOR_SWITCH', epIsGridConnected: 'EP_IS_GRID_CONNECTED', epIsIslandGrid: 'EP_IS_ISLAND_GRID' },
-    'WB[0]': { wbEnergyAll: 'WB_ENERGY_ALL', wbEnergySolar: 'WB_ENERGY_SOLAR', wbStatus: 'WB_STATUS', wbMode: 'WB_MODE', wbPowerL1: 'WB_PM_POWER_L1', wbPowerL2: 'WB_PM_POWER_L2', wbPowerL3: 'WB_PM_POWER_L3' }
-  };
-  var units = { pvWatts: 'W', batteryWatts: 'W', gridWatts: 'W', homeWatts: 'W', soc: '%', autarky: '%', selfConsumption: '%', batteryVoltage: 'V', batteryCurrent: 'A', chargeCycles: '', pviAcPowerL1: 'W', pviAcVoltageL1: 'V', pviDcPower: 'W', pviDcVoltage: 'V', pviDcCurrent: 'A', pviFrequency: 'Hz', pmPowerL1: 'W', pmPowerL2: 'W', pmPowerL3: 'W', pmVoltageL1: 'V', pmVoltageL2: 'V', pmVoltageL3: 'V', pmEnergyL1: 'Wh', pmEnergyL2: 'Wh', pmEnergyL3: 'Wh', dcdcBatteryCurrent: 'A', dcdcBatteryVoltage: 'V', dcdcBatteryPower: 'W', epIsReadyForSwitch: '', epIsGridConnected: '', epIsIslandGrid: '', wbEnergyAll: 'Wh', wbEnergySolar: 'Wh', wbStatus: '', wbMode: '', wbPowerL1: 'W', wbPowerL2: 'W', wbPowerL3: 'W' };
-  var html = '';
-  for (var ns in groups) {
-    var isOpen = expNsState[ns] !== false;
-    html += '<div class="exp-ns-hdr' + (isOpen ? ' open' : '') + '" onclick="toggleExpNs(this,\'' + ns + '\')">' + ns + '</div>';
-    html += '<div class="exp-ns-items' + (isOpen ? ' open' : '') + '">';
-    var tags = groups[ns];
-    for (var key in tags) {
-      var v = d[key];
-      var fv = v != null ? (typeof v === 'number' ? (Number.isInteger(v) ? v : v.toFixed(2)) : '' + v) : '—';
-      var u = units[key] || '';
-      html += '<div class="exp-item"><span class="exp-item-tag">' + tags[key] + '</span><span class="exp-item-val">' + fv + (u ? ' ' + u : '') + '</span></div>';
-    }
-    html += '</div>';
+  fetch('/api/raw-items')
+    .then(r => r.json())
+    .then(items => updateTree(items))
+    .catch(() => {});
+}
+
+function mergeItems(liveItems) {
+  var grouped = {};
+  (liveItems || []).forEach(function(item) {
+    var ns = getNamespace(item.tag);
+    if (!grouped[ns]) grouped[ns] = [];
+    grouped[ns].push(item);
+  });
+  Object.keys(onDemandResults).forEach(function(ns) {
+    if (!grouped[ns]) grouped[ns] = [];
+    var existing = new Set(grouped[ns].map(function(i) { return i.tag; }));
+    onDemandResults[ns].forEach(function(item) {
+      if (!existing.has(item.tag)) grouped[ns].push(item);
+    });
+  });
+  return grouped;
+}
+
+function collectKeys(items, prefix) {
+  var keys = [];
+  (items || []).forEach(function(item) {
+    keys.push(prefix + item.tag);
+    if (item.children) keys = keys.concat(collectKeys(item.children, prefix + item.tag + '/'));
+  });
+  return keys;
+}
+
+function updateTree(liveItems) {
+  var grouped = mergeItems(liveItems);
+
+  // Build a key fingerprint to detect structural changes
+  var allKeys = [];
+  Object.keys(fetchableNs).forEach(function(ns) {
+    var items = grouped[ns] || [];
+    allKeys.push(ns + ':' + items.length);
+    items.forEach(function(i) { allKeys = allKeys.concat(collectKeys([i], '')); });
+  });
+  var keyStr = allKeys.join('|');
+
+  if (keyStr !== lastItemKeys) {
+    lastItemKeys = keyStr;
+    fullRender(grouped);
+  } else {
+    patchValues(grouped);
   }
-  $('expTree').innerHTML = html;
+
   $('expTick').textContent = 'updated ' + new Date().toLocaleTimeString();
 }
 
-export function toggleExpNs(el, ns) { expNsState[ns] = !el.classList.contains('open'); buildExpTree(); }
+function patchValues(grouped) {
+  var tree = $('expTree');
+  tree.querySelectorAll('[data-val-key]').forEach(function(el) {
+    var key = el.getAttribute('data-val-key');
+    var parts = key.split('/');
+    var ns = parts[0];
+    var path = parts.slice(1);
+    var item = findItem(grouped[ns] || [], path);
+    if (!item) return;
+    var valEl = el.querySelector('.exp-item-val');
+    var hexEl = el.querySelector('.exp-item-hex');
+    var newVal = item.value !== undefined && item.value !== null ? '' + item.value : '';
+    var newHex = item.hex || '';
+    if (valEl && valEl.textContent !== newVal) valEl.textContent = newVal;
+    if (hexEl && hexEl.textContent !== newHex) hexEl.textContent = newHex;
+    var copyBtns = el.querySelectorAll('.exp-copy');
+    copyBtns.forEach(function(btn) {
+      if (btn.title === 'Copy value') btn.setAttribute('data-copy', newVal);
+      if (btn.title === 'Copy hex') btn.setAttribute('data-copy', newHex);
+    });
+  });
+}
+
+function findItem(items, path) {
+  if (!path.length || !items) return null;
+  var tag = path[0];
+  for (var i = 0; i < items.length; i++) {
+    if (items[i].tag === tag) {
+      if (path.length === 1) return items[i];
+      return findItem(items[i].children || [], path.slice(1));
+    }
+  }
+  return null;
+}
+
+function fullRender(grouped) {
+  var allNs = Object.keys(fetchableNs);
+  var html = '';
+
+  allNs.forEach(function(ns) {
+    var items = grouped[ns] || [];
+    var hasData = items.length > 0;
+    var isOpen = nsState[ns] !== false && hasData;
+    var isFetching = nsState[ns + '_fetching'];
+    var conf = fetchableNs[ns] || {};
+
+    html += '<div class="exp-ns-hdr' + (isOpen ? ' open' : '') + '" onclick="toggleExpNs(this,\'' + ns + '\')">';
+    html += '<span>' + ns + '</span>';
+    if (hasData) html += '<span class="exp-ns-count">' + items.length + '</span>';
+    if (!conf.noFetch && conf.tags && conf.tags.length)
+      html += '<button class="exp-fetch-btn' + (isFetching ? ' loading' : '') + '" onclick="event.stopPropagation();fetchNs(\'' + ns + '\')" title="Fetch all ' + ns + ' tags">' + (isFetching ? '...' : '↻') + '</button>';
+    html += '</div>';
+
+    html += '<div class="exp-ns-items' + (isOpen ? ' open' : '') + '">';
+    if (hasData) {
+      items.forEach(function(item) { html += renderItem(item, 0, ns + '/' + item.tag); });
+    } else {
+      html += '<div style="color:var(--muted);font-size:.65rem;padding:.2rem 0">No polled data — click ↻ to fetch</div>';
+    }
+    html += '</div>';
+  });
+
+  $('expTree').innerHTML = html;
+}
+
+function renderItem(item, depth, keyPath) {
+  var isContainer = item.type === 'Container' && item.children && item.children.length;
+  var isError = item.type === 'Error';
+  var indent = depth * 0.75;
+
+  var marks = '';
+  for (var d = 1; d <= depth; d++) {
+    marks += '<span class="exp-depth-mark" style="left:' + ((d - 1) * 0.75 + 0.15) + 'rem"></span>';
+  }
+  var html = '<div class="exp-item" data-val-key="' + keyPath + '">';
+  html += '<span class="exp-item-tag' + (isError ? ' error' : '') + '" style="padding-left:' + indent + 'rem">' +
+    marks + item.tag + '</span>';
+  html += '<span class="exp-item-type">' + item.type + '</span>';
+  var val = (item.value !== undefined && item.value !== null) ? '' + item.value : '';
+  var hex = item.hex || '';
+  html += '<span class="exp-item-val">' + val + '</span>';
+  html += '<span class="exp-item-hex">' + hex + '</span>';
+  html += '<span class="exp-actions">';
+  if (val) html += '<button class="exp-copy" data-copy="' + val.replace(/"/g, '&quot;') + '" onclick="expCopy(this)" title="Copy value">val</button>';
+  if (hex) html += '<button class="exp-copy" data-copy="' + hex.replace(/"/g, '&quot;') + '" onclick="expCopy(this)" title="Copy hex">hex</button>';
+  html += '</span>';
+  html += '</div>';
+
+  if (isContainer) {
+    item.children.forEach(function(child) {
+      html += renderItem(child, depth + 1, keyPath + '/' + child.tag);
+    });
+  }
+
+  return html;
+}
+
+function getNamespace(tagName) {
+  var m = tagName.match(/^([A-Z]+)_/);
+  return m ? m[1] : 'OTHER';
+}
+
+export function toggleExpNs(el, ns) {
+  nsState[ns] = !el.classList.contains('open');
+  lastItemKeys = '';
+  buildExpTree();
+}
+
+window.expCopy = function(btn) {
+  var text = btn.getAttribute('data-copy');
+  if (!text) return;
+  var label = btn.textContent;
+  navigator.clipboard.writeText(text).then(function() {
+    btn.textContent = '✓';
+    setTimeout(function() { btn.textContent = label; }, 1000);
+  });
+};
+
+window.fetchNs = function(ns) {
+  var config = fetchableNs[ns];
+  if (!config || !config.tags || !config.tags.length) return;
+
+  nsState[ns + '_fetching'] = true;
+  lastItemKeys = '';
+  buildExpTree();
+
+  var body = { tags: config.tags };
+  if (config.device) {
+    body.deviceNamespace = config.device;
+    body.deviceIndex = config.idx;
+  }
+
+  fetch('/api/send', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body)
+  })
+    .then(r => r.json())
+    .then(d => {
+      nsState[ns + '_fetching'] = false;
+      if (d.items) {
+        onDemandResults[ns] = d.items;
+        nsState[ns] = true;
+      }
+      lastItemKeys = '';
+      buildExpTree();
+    })
+    .catch(() => {
+      nsState[ns + '_fetching'] = false;
+      lastItemKeys = '';
+      buildExpTree();
+    });
+};

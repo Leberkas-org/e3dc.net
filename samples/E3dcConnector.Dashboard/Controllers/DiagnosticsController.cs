@@ -21,4 +21,11 @@ public class DiagnosticsController(ActorRegistry actors) : Generated.Diagnostics
         var result = await actors.Snapshot.Ask<DiagnosticsResult>(new GetDiagnostics(), AskTimeout);
         return Ok(result.Info);
     }
+
+    [HttpGet("api/raw-items")]
+    public async Task<ActionResult> GetRawItems(CancellationToken ct)
+    {
+        var result = await actors.Snapshot.Ask<RawItemsResult>(new GetRawItems(), AskTimeout);
+        return Ok(result.Items);
+    }
 }

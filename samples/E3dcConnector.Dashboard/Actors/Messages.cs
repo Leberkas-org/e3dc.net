@@ -22,18 +22,21 @@ public sealed record UpdateEp(EmergencyPowerSnapshot Snapshot);
 public sealed record UpdateWb(WallboxSnapshot Snapshot);
 public sealed record UpdateDeviceInfo(DeviceInfo Info);
 public sealed record UpdateRawDump(string Dump);
+public sealed record UpdateRawItems(List<Generated.RscpItem> Items);
 
 public sealed record GetLatestSnapshot;
 public sealed record GetHistory;
 public sealed record GetDeviceInfo;
 public sealed record GetDiagnostics;
 public sealed record GetRawDump;
+public sealed record GetRawItems;
 
 public sealed record LatestSnapshotResult(Generated.DashboardSnapshot? Snapshot);
 public sealed record HistoryResult(Generated.DashboardSnapshot[] Snapshots);
 public sealed record DeviceInfoResult(Generated.DeviceInfoResponse? Info);
 public sealed record DiagnosticsResult(Generated.DiagnosticInfo Info);
 public sealed record RawDumpResult(string Dump);
+public sealed record RawItemsResult(List<Generated.RscpItem> Items);
 
 // ── PollingActor messages ──
 

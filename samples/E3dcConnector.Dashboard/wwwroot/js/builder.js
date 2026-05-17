@@ -108,12 +108,14 @@ window.wbShowDetail = function (tagName) {
   var info = tagDb.tags[tagName];
   if (!info) return;
   var el = $('wbDetail');
-  var rows = '<div class="wb-detail-name">' + tagName + '</div>';
-  rows += '<div class="wb-detail-row"><span class="wb-detail-label">Desc</span><span class="wb-detail-value">' + (info.desc || '--') + '</span></div>';
-  if (info.dataType) rows += '<div class="wb-detail-row"><span class="wb-detail-label">Type</span><span class="wb-detail-value">' + info.dataType + '</span></div>';
-  if (info.unit) rows += '<div class="wb-detail-row"><span class="wb-detail-label">Unit</span><span class="wb-detail-value">' + info.unit + '</span></div>';
-  if (info.resp) rows += '<div class="wb-detail-row"><span class="wb-detail-label">Resp</span><span class="wb-detail-value">' + info.resp + '</span></div>';
-  el.innerHTML = rows;
+  var html = '<span class="wb-detail-name">' + tagName + '</span>';
+  html += '<span class="wb-detail-value">' + (info.desc || '') + '</span>';
+  var meta = [];
+  if (info.dataType) meta.push('<span class="wb-detail-label">Type</span> ' + info.dataType);
+  if (info.unit) meta.push('<span class="wb-detail-label">Unit</span> ' + info.unit);
+  if (info.resp) meta.push('<span class="wb-detail-label">→</span> ' + info.resp);
+  if (meta.length) html += '<span style="margin-left:auto;display:flex;gap:1rem">' + meta.join('') + '</span>';
+  el.innerHTML = html;
   el.classList.add('visible');
 };
 
@@ -284,23 +286,21 @@ function renderResponseItem(item, depth) {
   var html = '<div class="wb-resp-item" style="margin-left:' + (depth * 0) + 'px">';
 
   if (isContainer) {
-    html += '<div class="' + tagClass + '" onclick="wbToggleResp(\'' + id + '\',this)">' +
+    html += '<div class="' + tagClass + ' open" onclick="wbToggleResp(\'' + id + '\',this)">' +
       item.tag + ' <span class="wb-resp-type">' + item.type + '</span></div>';
-    html += '<div class="wb-resp-detail" id="' + id + '">';
+    html += '<div class="wb-resp-detail open" id="' + id + '">';
     html += '<div class="wb-resp-children">';
     item.children.forEach(function (child) {
       html += renderResponseItem(child, depth + 1);
     });
     html += '</div></div>';
   } else {
-    html += '<div class="' + tagClass + '" onclick="wbToggleResp(\'' + id + '\',this)">' +
+    html += '<div class="' + tagClass + '">' +
       item.tag +
       ' <span class="wb-resp-type">' + (item.type || '') + '</span>' +
       '<span class="wb-resp-val">' + valDisplay + '</span>' +
       '</div>';
-    html += '<div class="wb-resp-detail" id="' + id + '">';
-    if (hexDisplay) html += '<div style="padding:.2rem 0"><span class="wb-resp-hex">' + hexDisplay + '</span></div>';
-    html += '</div>';
+    if (hexDisplay) html += '<div class="wb-resp-hex">' + hexDisplay + '</div>';
   }
 
   html += '</div>';

@@ -64,15 +64,25 @@ public sealed class PollingActor : ReceiveActor, IWithTimers
                       Wb.PmPowerL1, Wb.PmPowerL2, Wb.PmPowerL3)) as IRscpCommand;
 
         var infoRequest = RscpRequest.Create()
-            .Read(Info.SerialNumber, Info.SwRelease, Info.IpAddress) as IRscpCommand;
+            .Read(Info.SerialNumber, Info.ProductionDate, Info.SwRelease,
+                  Info.IpAddress, Info.SubnetMask, Info.Gateway,
+                  Info.Dns, Info.Time, Info.TimeZone) as IRscpCommand;
 
         var epRequest = RscpRequest.Create()
             .Read(Ep.IsReadyForSwitch, Ep.IsGridConnected, Ep.IsIslandGrid) as IRscpCommand;
 
         Timers.StartPeriodicTimer("fast", new FastTick(), TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(_options.FastPollingIntervalSeconds));
 
+        var haRequest = RscpRequest.Create()
+            .Read(Ha.DatapointList, Ha.ActuatorStates) as IRscpCommand;
+
+        var umRequest = RscpRequest.Create()
+            .Read(Um.UpdateStatus) as IRscpCommand;
+
         Context.System.Scheduler.ScheduleTellOnce(TimeSpan.FromSeconds(2), _gateway, new SendPollingCommand(infoRequest!), Self);
         Context.System.Scheduler.ScheduleTellOnce(TimeSpan.FromSeconds(3), _gateway, new SendPollingCommand(epRequest!), Self);
+        Context.System.Scheduler.ScheduleTellOnce(TimeSpan.FromSeconds(4), _gateway, new SendPollingCommand(haRequest!), Self);
+        Context.System.Scheduler.ScheduleTellOnce(TimeSpan.FromSeconds(5), _gateway, new SendPollingCommand(umRequest!), Self);
     }
 
     public static Props Props(E3dcOptions options, IActorRef gateway)

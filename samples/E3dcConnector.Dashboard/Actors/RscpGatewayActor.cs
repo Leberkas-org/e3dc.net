@@ -88,6 +88,7 @@ public sealed class RscpGatewayActor : ReceiveActor, IWithTimers
 
         // Polling response: parse and forward to SnapshotActor
         _snapshotActor.Tell(new UpdateRawDump(DumpItems(data.Items)));
+        _snapshotActor.Tell(new UpdateRawItems(ItemsToJson(data.Items)));
 
         var info = data.ToDeviceInfo();
         if (info is not null) _snapshotActor.Tell(new UpdateDeviceInfo(info));

@@ -26,6 +26,7 @@ public sealed class SnapshotActor : ReceiveActor
     private DeviceInfo? _deviceInfo;
     private Generated.DashboardSnapshot? _latestSnapshot;
     private string _rawDump = "no data yet";
+    private readonly Dictionary<string, Generated.RscpItem> _rawItemMap = new();
     private string? _lastError;
 
     public SnapshotActor(int maxHistory)
@@ -42,12 +43,18 @@ public sealed class SnapshotActor : ReceiveActor
         Receive<UpdateWb>(msg => Handle(msg));
         Receive<UpdateDeviceInfo>(msg => Handle(msg));
         Receive<UpdateRawDump>(msg => Handle(msg));
+        Receive<UpdateRawItems>(msg =>
+        {
+            foreach (var item in msg.Items)
+                _rawItemMap[item.Tag] = item;
+        });
 
         Receive<GetLatestSnapshot>(_ => Sender.Tell(new LatestSnapshotResult(_latestSnapshot)));
         Receive<GetHistory>(_ => Sender.Tell(new HistoryResult(_history.ToArray())));
         Receive<GetDeviceInfo>(_ => Sender.Tell(BuildDeviceInfoResult()));
         Receive<GetDiagnostics>(_ => Sender.Tell(BuildDiagnosticsResult()));
         Receive<GetRawDump>(_ => Sender.Tell(new RawDumpResult(_rawDump)));
+        Receive<GetRawItems>(_ => Sender.Tell(new RawItemsResult(_rawItemMap.Values.ToList())));
     }
 
     private void Handle(UpdateEms msg)
