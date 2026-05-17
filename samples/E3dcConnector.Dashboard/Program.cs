@@ -413,13 +413,10 @@ app.MapPost("/api/history-query", async (HttpContext ctx) =>
         _       => (RscpTag.DB_REQ_HISTORY_DATA_DAY,   TimeSpan.FromDays(1), TimeSpan.FromMinutes(15)),
     };
 
-    var startSec = start.ToUnixTimeSeconds();
-    var intervalSec = (long)interval.TotalSeconds;
-    var spanSec = (long)span.TotalSeconds;
     var container = RscpDataItem.CreateContainer((uint)reqTag, [
-        RscpDataItem.FromTimestamp((uint)RscpTag.DB_REQ_HISTORY_TIME_START, start),
-        RscpDataItem.FromTimestamp((uint)RscpTag.DB_REQ_HISTORY_TIME_INTERVAL, DateTimeOffset.UnixEpoch.AddSeconds(intervalSec)),
-        RscpDataItem.FromTimestamp((uint)RscpTag.DB_REQ_HISTORY_TIME_SPAN, DateTimeOffset.UnixEpoch.AddSeconds(spanSec)),
+        MakeUInt64((uint)RscpTag.DB_REQ_HISTORY_TIME_START, (ulong)start.ToUnixTimeSeconds()),
+        MakeUInt64((uint)RscpTag.DB_REQ_HISTORY_TIME_INTERVAL, (ulong)interval.TotalSeconds),
+        MakeUInt64((uint)RscpTag.DB_REQ_HISTORY_TIME_SPAN, (ulong)span.TotalSeconds),
     ]);
     var request = new RawCommand([container]);
 
@@ -452,11 +449,11 @@ app.MapFallback(async ctx =>
     await ctx.Response.SendFileAsync(Path.Combine(app.Environment.WebRootPath, "index.html"));
 });
 
-RscpDataItem MakeTimestamp(uint tag, long seconds)
+RscpDataItem MakeUInt64(uint tag, ulong value)
 {
-    var buf = new byte[12];
-    System.Buffers.Binary.BinaryPrimitives.WriteInt64LittleEndian(buf, seconds);
-    return new RscpDataItem(tag, RscpDataType.Timestamp, buf);
+    var buf = new byte[8];
+    System.Buffers.Binary.BinaryPrimitives.WriteUInt64LittleEndian(buf, value);
+    return new RscpDataItem(tag, RscpDataType.UInt64, buf);
 }
 
 object? ParseDbValueContainer(RscpDataItem container)
