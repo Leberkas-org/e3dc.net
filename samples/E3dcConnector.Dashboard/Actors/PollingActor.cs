@@ -56,14 +56,23 @@ public sealed class PollingActor : ReceiveActor, IWithTimers
             .FromDevice(Pm.Device, _options.PmDeviceIndex, b => b
                 .Read(Pm.PowerL1, Pm.PowerL2, Pm.PowerL3,
                       Pm.VoltageL1, Pm.VoltageL2, Pm.VoltageL3,
-                      Pm.EnergyL1, Pm.EnergyL2, Pm.EnergyL3)) as IRscpCommand;
+                      Pm.EnergyL1, Pm.EnergyL2, Pm.EnergyL3))
+            .FromDevice(Dcdc.Device, 0, b => b
+                .Read(Dcdc.IBat, Dcdc.UBat, Dcdc.PBat))
+            .FromDevice(Wb.Device, 0, b => b
+                .Read(Wb.EnergyAll, Wb.EnergySolar, Wb.Status, Wb.Mode,
+                      Wb.PmPowerL1, Wb.PmPowerL2, Wb.PmPowerL3)) as IRscpCommand;
 
         var infoRequest = RscpRequest.Create()
             .Read(Info.SerialNumber, Info.SwRelease, Info.IpAddress) as IRscpCommand;
 
+        var epRequest = RscpRequest.Create()
+            .Read(Ep.IsReadyForSwitch, Ep.IsGridConnected, Ep.IsIslandGrid) as IRscpCommand;
+
         Timers.StartPeriodicTimer("fast", new FastTick(), TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(_options.FastPollingIntervalSeconds));
 
         Context.System.Scheduler.ScheduleTellOnce(TimeSpan.FromSeconds(2), _gateway, new SendPollingCommand(infoRequest!), Self);
+        Context.System.Scheduler.ScheduleTellOnce(TimeSpan.FromSeconds(3), _gateway, new SendPollingCommand(epRequest!), Self);
     }
 
     public static Props Props(E3dcOptions options, IActorRef gateway)

@@ -1,10 +1,13 @@
 using Akka.Actor;
 using Generated = E3dcConnector.Dashboard.Controllers.Generated;
 using E3dcConnector.Typed.Bat;
+using E3dcConnector.Typed.Dcdc;
 using E3dcConnector.Typed.Ems;
+using E3dcConnector.Typed.Ep;
 using E3dcConnector.Typed.Info;
 using E3dcConnector.Typed.Pm;
 using E3dcConnector.Typed.Pvi;
+using E3dcConnector.Typed.Wb;
 
 namespace E3dcConnector.Dashboard.Actors;
 
@@ -17,6 +20,9 @@ public sealed class SnapshotActor : ReceiveActor
     private BatterySnapshot? _lastBat;
     private InverterSnapshot? _lastPvi;
     private PowerMeterSnapshot? _lastPm;
+    private DcdcSnapshot? _lastDcdc;
+    private EmergencyPowerSnapshot? _lastEp;
+    private WallboxSnapshot? _lastWb;
     private DeviceInfo? _deviceInfo;
     private Generated.DashboardSnapshot? _latestSnapshot;
     private string _rawDump = "no data yet";
@@ -31,6 +37,9 @@ public sealed class SnapshotActor : ReceiveActor
         Receive<UpdateBat>(msg => Handle(msg));
         Receive<UpdatePvi>(msg => Handle(msg));
         Receive<UpdatePm>(msg => Handle(msg));
+        Receive<UpdateDcdc>(msg => Handle(msg));
+        Receive<UpdateEp>(msg => Handle(msg));
+        Receive<UpdateWb>(msg => Handle(msg));
         Receive<UpdateDeviceInfo>(msg => Handle(msg));
         Receive<UpdateRawDump>(msg => Handle(msg));
 
@@ -81,6 +90,10 @@ public sealed class SnapshotActor : ReceiveActor
         catch (Exception ex) { _lastError = FormatError(ex); }
     }
 
+    private void Handle(UpdateDcdc msg) { try { _lastDcdc = msg.Snapshot; RebuildSnapshot(); } catch (Exception ex) { _lastError = FormatError(ex); } }
+    private void Handle(UpdateEp msg)   { try { _lastEp   = msg.Snapshot; RebuildSnapshot(); } catch (Exception ex) { _lastError = FormatError(ex); } }
+    private void Handle(UpdateWb msg)   { try { _lastWb   = msg.Snapshot; RebuildSnapshot(); } catch (Exception ex) { _lastError = FormatError(ex); } }
+
     private void Handle(UpdateDeviceInfo msg)
     {
         try
@@ -126,6 +139,19 @@ public sealed class SnapshotActor : ReceiveActor
             PmEnergyL1      = _lastPm?.EnergyL1,
             PmEnergyL2      = _lastPm?.EnergyL2,
             PmEnergyL3      = _lastPm?.EnergyL3,
+            DcdcBatteryCurrent = _lastDcdc?.BatteryCurrent,
+            DcdcBatteryVoltage = _lastDcdc?.BatteryVoltage,
+            DcdcBatteryPower   = _lastDcdc?.BatteryPower,
+            EpIsReadyForSwitch = _lastEp?.IsReadyForSwitch,
+            EpIsGridConnected  = _lastEp?.IsGridConnected,
+            EpIsIslandGrid     = _lastEp?.IsIslandGrid,
+            WbEnergyAll        = _lastWb?.EnergyAll,
+            WbEnergySolar      = _lastWb?.EnergySolar,
+            WbStatus           = _lastWb?.Status,
+            WbMode             = _lastWb?.Mode,
+            WbPowerL1          = _lastWb?.PowerL1,
+            WbPowerL2          = _lastWb?.PowerL2,
+            WbPowerL3          = _lastWb?.PowerL3,
             Timestamp       = DateTimeOffset.UtcNow,
         };
 
@@ -161,6 +187,9 @@ public sealed class SnapshotActor : ReceiveActor
             HasBat        = _lastBat is not null,
             HasPvi        = _lastPvi is not null,
             HasPm         = _lastPm is not null,
+            HasDcdc       = _lastDcdc is not null,
+            HasEp         = _lastEp is not null,
+            HasWb         = _lastWb is not null,
             ConsumerCount = 0, // PollingActor will track this later
             LastError     = _lastError,
         };

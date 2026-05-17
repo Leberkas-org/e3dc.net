@@ -103,6 +103,15 @@ public sealed class RscpGatewayActor : ReceiveActor, IWithTimers
 
         var pm = data.ToPowerMeterSnapshot();
         if (pm is not null) _snapshotActor.Tell(new UpdatePm(pm));
+
+        var dcdc = data.ToDcdcSnapshot();
+        if (dcdc is not null) _snapshotActor.Tell(new UpdateDcdc(dcdc));
+
+        var ep = data.ToEmergencyPowerSnapshot();
+        if (ep is not null) _snapshotActor.Tell(new UpdateEp(ep));
+
+        var wb = data.ToWallboxSnapshot();
+        if (wb is not null) _snapshotActor.Tell(new UpdateWb(wb));
     }
 
     private void HandleSendPollingCommand(SendPollingCommand msg)
