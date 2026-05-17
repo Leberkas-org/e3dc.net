@@ -4,10 +4,13 @@ using E3dcConnector.Messages.Responses;
 using E3dcConnector.Protocol;
 using E3dcConnector.Tags;
 using E3dcConnector.Typed.Bat;
+using E3dcConnector.Typed.Dcdc;
 using E3dcConnector.Typed.Ems;
+using E3dcConnector.Typed.Ep;
 using E3dcConnector.Typed.Info;
 using E3dcConnector.Typed.Pm;
 using E3dcConnector.Typed.Pvi;
+using E3dcConnector.Typed.Wb;
 
 namespace E3dcConnector.Typed;
 
@@ -127,6 +130,67 @@ public static class RscpResponseExtensions
         }
 
         return found ? new PowerMeterSnapshot(pL1, pL2, pL3, vL1, vL2, vL3, eL1, eL2, eL3) : null;
+    }
+
+    public static DcdcSnapshot? ToDcdcSnapshot(this RscpDataResponse response)
+    {
+        float iBat = 0, uBat = 0, pBat = 0;
+        var found = false;
+
+        foreach (var item in Flatten(response.Items))
+        {
+            switch ((RscpTag)item.Tag)
+            {
+                case RscpTag.DCDC_I_BAT: iBat = ReadValue(item); found = true; break;
+                case RscpTag.DCDC_U_BAT: uBat = ReadValue(item); found = true; break;
+                case RscpTag.DCDC_P_BAT: pBat = ReadValue(item); found = true; break;
+            }
+        }
+
+        return found ? new DcdcSnapshot(iBat, uBat, pBat) : null;
+    }
+
+    public static EmergencyPowerSnapshot? ToEmergencyPowerSnapshot(this RscpDataResponse response)
+    {
+        bool ready = false, grid = false, island = false;
+        var found = false;
+
+        foreach (var item in Flatten(response.Items))
+        {
+            switch ((RscpTag)item.Tag)
+            {
+                case RscpTag.EP_IS_READY_FOR_SWITCH: ready = item.Value.Span[0] != 0; found = true; break;
+                case RscpTag.EP_IS_GRID_CONNECTED:   grid = item.Value.Span[0] != 0; found = true; break;
+                case RscpTag.EP_IS_ISLAND_GRID:      island = item.Value.Span[0] != 0; found = true; break;
+            }
+        }
+
+        return found ? new EmergencyPowerSnapshot(ready, grid, island) : null;
+    }
+
+    public static WallboxSnapshot? ToWallboxSnapshot(this RscpDataResponse response)
+    {
+        double energyAll = 0, energySolar = 0;
+        int status = 0, errorCode = 0, mode = 0;
+        float pL1 = 0, pL2 = 0, pL3 = 0;
+        var found = false;
+
+        foreach (var item in Flatten(response.Items))
+        {
+            switch ((RscpTag)item.Tag)
+            {
+                case RscpTag.WB_ENERGY_ALL:   energyAll = ReadDouble(item); found = true; break;
+                case RscpTag.WB_ENERGY_SOLAR: energySolar = ReadDouble(item); found = true; break;
+                case RscpTag.WB_STATUS:       status = ReadInt32(item); found = true; break;
+                case RscpTag.WB_ERROR_CODE:   errorCode = ReadInt32(item); found = true; break;
+                case RscpTag.WB_MODE:         mode = ReadInt32(item); found = true; break;
+                case RscpTag.WB_PM_POWER_L1:  pL1 = ReadValue(item); found = true; break;
+                case RscpTag.WB_PM_POWER_L2:  pL2 = ReadValue(item); found = true; break;
+                case RscpTag.WB_PM_POWER_L3:  pL3 = ReadValue(item); found = true; break;
+            }
+        }
+
+        return found ? new WallboxSnapshot(energyAll, energySolar, status, errorCode, mode, pL1, pL2, pL3) : null;
     }
 
     // Reads a value from an item that may be a direct scalar or a container wrapping {INDEX, VALUE}
