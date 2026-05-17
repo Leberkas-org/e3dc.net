@@ -29,8 +29,21 @@ builder.Services.AddSingleton(new ActorRegistry
     Polling = pollingActor,
 });
 builder.Services.AddControllers().AddNewtonsoftJson();
+builder.Services.AddOpenApiDocument(c =>
+{
+    c.Title = "E3DC Dashboard API";
+    c.Version = "v1";
+});
 
 var app = builder.Build();
+
+// ── Swagger UI ──
+app.UseOpenApi(c => c.Path = "/swagger/{documentName}/swagger.json");
+app.UseSwaggerUi(c =>
+{
+    c.Path = "/swagger";
+    c.DocumentPath = "/swagger/{documentName}/swagger.json";
+});
 
 // ── Static files + fallback ──
 app.UseStaticFiles();
