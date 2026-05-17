@@ -1,0 +1,372 @@
+openapi: 3.0.3
+info:
+  title: E3DC Dashboard API
+  description: REST API for the E3DC RSCP energy monitoring dashboard
+  version: 1.0.0
+
+paths:
+  /api/history:
+    get:
+      operationId: getHistory
+      summary: Get chart history ring buffer
+      tags: [Dashboard]
+      responses:
+        '200':
+          description: Array of recent dashboard snapshots
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/DashboardSnapshot'
+
+  /api/info:
+    get:
+      operationId: getDeviceInfo
+      summary: Get cached device info (serial, SW version, IP)
+      tags: [Dashboard]
+      responses:
+        '200':
+          description: Device information
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeviceInfoResponse'
+
+  /api/tags:
+    get:
+      operationId: getTags
+      summary: Get all RSCP tags grouped by namespace
+      tags: [Rscp]
+      responses:
+        '200':
+          description: Tags grouped by namespace
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/TagEntry'
+
+  /api/debug:
+    get:
+      operationId: getDebugDump
+      summary: Get raw RSCP tag dump of last response
+      tags: [Diagnostics]
+      responses:
+        '200':
+          description: Plain text dump
+          content:
+            text/plain:
+              schema:
+                type: string
+
+  /api/diag:
+    get:
+      operationId: getDiagnostics
+      summary: Get internal diagnostic state
+      tags: [Diagnostics]
+      responses:
+        '200':
+          description: Diagnostic info
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DiagnosticInfo'
+
+  /api/send:
+    post:
+      operationId: sendRscpRequest
+      summary: Send ad-hoc RSCP tag request
+      tags: [Rscp]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SendRequest'
+      responses:
+        '200':
+          description: Parsed RSCP response items
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SendResponse'
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/history-query:
+    post:
+      operationId: queryHistory
+      summary: Query E3DC stored historical energy data
+      tags: [Rscp]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/HistoryQueryRequest'
+      responses:
+        '200':
+          description: Historical data points
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HistoryQueryResponse'
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+components:
+  schemas:
+    DashboardSnapshot:
+      type: object
+      required: [pvWatts, batteryWatts, gridWatts, homeWatts, soc, autarky, selfConsumption, batteryVoltage, batteryCurrent, chargeCycles, timestamp]
+      properties:
+        pvWatts:
+          type: integer
+        batteryWatts:
+          type: integer
+        gridWatts:
+          type: integer
+        homeWatts:
+          type: integer
+        soc:
+          type: number
+          format: float
+        autarky:
+          type: number
+          format: float
+        selfConsumption:
+          type: number
+          format: float
+        batteryVoltage:
+          type: number
+          format: float
+        batteryCurrent:
+          type: number
+          format: float
+        chargeCycles:
+          type: integer
+        pviAcPowerL1:
+          type: number
+          format: float
+          nullable: true
+        pviAcVoltageL1:
+          type: number
+          format: float
+          nullable: true
+        pviDcPower:
+          type: number
+          format: float
+          nullable: true
+        pviDcVoltage:
+          type: number
+          format: float
+          nullable: true
+        pviDcCurrent:
+          type: number
+          format: float
+          nullable: true
+        pviFrequency:
+          type: number
+          format: float
+          nullable: true
+        pmPowerL1:
+          type: number
+          format: float
+          nullable: true
+        pmPowerL2:
+          type: number
+          format: float
+          nullable: true
+        pmPowerL3:
+          type: number
+          format: float
+          nullable: true
+        pmVoltageL1:
+          type: number
+          format: float
+          nullable: true
+        pmVoltageL2:
+          type: number
+          format: float
+          nullable: true
+        pmVoltageL3:
+          type: number
+          format: float
+          nullable: true
+        pmEnergyL1:
+          type: number
+          format: double
+          nullable: true
+        pmEnergyL2:
+          type: number
+          format: double
+          nullable: true
+        pmEnergyL3:
+          type: number
+          format: double
+          nullable: true
+        timestamp:
+          type: string
+          format: date-time
+
+    DeviceInfoResponse:
+      type: object
+      required: [serialNumber, productionDate, swRelease, ipAddress, subnetMask, gateway]
+      properties:
+        serialNumber:
+          type: string
+        productionDate:
+          type: string
+        swRelease:
+          type: string
+        ipAddress:
+          type: string
+        subnetMask:
+          type: string
+        gateway:
+          type: string
+
+    TagEntry:
+      type: object
+      required: [name, hex]
+      properties:
+        name:
+          type: string
+        hex:
+          type: string
+
+    DiagnosticInfo:
+      type: object
+      required: [hasSnapshot, hasEms, hasBat, hasPvi, hasPm, consumerCount]
+      properties:
+        hasSnapshot:
+          type: boolean
+        hasEms:
+          type: boolean
+        hasBat:
+          type: boolean
+        hasPvi:
+          type: boolean
+        hasPm:
+          type: boolean
+        consumerCount:
+          type: integer
+        lastError:
+          type: string
+          nullable: true
+
+    SendRequest:
+      type: object
+      required: [tags]
+      properties:
+        tags:
+          type: array
+          items:
+            type: string
+        deviceNamespace:
+          type: string
+          nullable: true
+        deviceIndex:
+          type: integer
+          nullable: true
+
+    SendResponse:
+      type: object
+      required: [items]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/RscpItem'
+
+    RscpItem:
+      type: object
+      required: [tag, type, hex]
+      properties:
+        tag:
+          type: string
+        type:
+          type: string
+        hex:
+          type: string
+        value:
+          nullable: true
+        children:
+          type: array
+          items:
+            $ref: '#/components/schemas/RscpItem'
+          nullable: true
+
+    HistoryQueryRequest:
+      type: object
+      properties:
+        start:
+          type: string
+          format: date-time
+          nullable: true
+        period:
+          type: string
+          enum: [day, week, month, year]
+          nullable: true
+
+    HistoryQueryResponse:
+      type: object
+      required: [period, start, dataPoints]
+      properties:
+        period:
+          type: string
+        start:
+          type: string
+        summary:
+          $ref: '#/components/schemas/HistoryDataPoint'
+          nullable: true
+        dataPoints:
+          type: array
+          items:
+            $ref: '#/components/schemas/HistoryDataPoint'
+        count:
+          type: integer
+
+    HistoryDataPoint:
+      type: object
+      required: [index, batIn, batOut, gridIn, gridOut, solar, consumption]
+      properties:
+        index:
+          type: integer
+        batIn:
+          type: number
+          format: double
+        batOut:
+          type: number
+          format: double
+        gridIn:
+          type: number
+          format: double
+        gridOut:
+          type: number
+          format: double
+        solar:
+          type: number
+          format: double
+        consumption:
+          type: number
+          format: double
+
+    ErrorResponse:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: string
