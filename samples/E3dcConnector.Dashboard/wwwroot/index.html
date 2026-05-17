@@ -339,7 +339,19 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);min-height:1
     </div>
     <button class="exp-btn" onclick="sendHistoryQuery()">Query</button>
   </div>
-  <div class="hist-result" id="histResult">Select a date and period, then click Query.</div>
+  <div class="chart-box" style="min-height:300px">
+    <div class="chart-head">
+      <div class="section-label" style="margin:0" id="histTitle">Energy History</div>
+      <div class="chart-leg">
+        <div class="chart-li cpv">Solar</div>
+        <div class="chart-li cbat">Battery In</div>
+        <div class="chart-li cgrid">Grid In</div>
+        <div class="chart-li chome">Consumption</div>
+      </div>
+    </div>
+    <div class="chart-area" style="height:250px"><canvas id="histChart"></canvas></div>
+  </div>
+  <div class="hist-result" id="histResult" style="display:none"></div>
 </div>
 
 <!-- ── Explorer Tab ── -->
@@ -556,9 +568,45 @@ $('histDate').value=new Date().toISOString().split('T')[0];
 function sendHistoryQuery(){
   var date=$('histDate').value;
   var period=document.querySelector('input[name=histPeriod]:checked').value;
-  $('histResult').textContent='Querying...';
+  $('histTitle').textContent='Loading...';
+  $('histResult').style.display='none';
   fetch('/api/history-query',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({start:date,period:period})})
-    .then(r=>r.text()).then(t=>{$('histResult').textContent=t}).catch(e=>{$('histResult').textContent='Error: '+e});
+    .then(r=>r.json()).then(d=>{
+      $('histTitle').textContent='Energy History — '+d.start+' ('+d.period+')';
+      if(!d.dataPoints||!d.dataPoints.length){$('histResult').style.display='block';$('histResult').textContent='No data for this period.';return}
+      drawHistChart(d.dataPoints);
+    }).catch(e=>{$('histTitle').textContent='Energy History';$('histResult').style.display='block';$('histResult').textContent='Error: '+e});
+}
+function drawHistChart(pts){
+  var c=$('histChart');if(!c)return;
+  var ctx=c.getContext('2d'),dpr=devicePixelRatio||1;
+  var r=c.parentElement.getBoundingClientRect(),W=r.width,H=250;
+  c.width=W*dpr;c.height=H*dpr;c.style.width=W+'px';c.style.height=H+'px';
+  ctx.scale(dpr,dpr);ctx.clearRect(0,0,W,H);
+  var p={t:10,b:30,l:55,r:10},cW=W-p.l-p.r,cH=H-p.t-p.b;
+  var vals=pts.flatMap(d=>[d.solar||0,d.batIn||0,d.gridIn||0,d.consumption||0]);
+  var mx=Math.max(1,...vals)*1.15;
+  // Grid lines
+  ctx.strokeStyle='rgba(36,40,48,.9)';ctx.lineWidth=1;
+  ctx.fillStyle='#6b7280';ctx.font='10px DM Mono';ctx.textAlign='right';
+  for(var i=0;i<=4;i++){var y=p.t+i/4*cH;ctx.beginPath();ctx.moveTo(p.l,y);ctx.lineTo(W-p.r,y);ctx.stroke();ctx.fillText((mx*(1-i/4)/1000).toFixed(1)+'kWh',p.l-6,y+4)}
+  // Bars
+  var n=pts.length,bw=cW/n,gw=bw*0.8,cols=['#5CC244','#4ea8de','#f05545','#f0a030'],keys=['solar','batIn','gridIn','consumption'];
+  var sw=gw/4;
+  for(var i=0;i<n;i++){
+    var x=p.l+i*bw+(bw-gw)/2;
+    for(var k=0;k<4;k++){
+      var v=pts[i][keys[k]]||0;
+      var bh=(v/mx)*cH;
+      ctx.fillStyle=cols[k];
+      ctx.fillRect(x+k*sw,p.t+cH-bh,sw-1,bh);
+    }
+    // X label
+    if(n<=31||(i%Math.ceil(n/12)===0)){
+      ctx.fillStyle='#6b7280';ctx.font='9px DM Mono';ctx.textAlign='center';
+      ctx.fillText(pts[i].index,x+gw/2,H-p.b+14);
+    }
+  }
 }
 
 // Request Builder

@@ -69,6 +69,24 @@ var history = new ConcurrentQueue<object>();
 var consumerCount = 0;
 var mediumPollCts = new CancellationTokenSource();
 
+// ── Response routing for ad-hoc requests ──
+var pendingResponses = new ConcurrentDictionary<string, TaskCompletionSource<RscpDataResponse>>();
+
+async Task<RscpDataResponse?> SendAndAwait(IRscpCommand cmd, TimeSpan timeout)
+{
+    var tcs = new TaskCompletionSource<RscpDataResponse>(TaskCreationOptions.RunContinuationsAsynchronously);
+    pendingResponses[cmd.Options.CorrelationId] = tcs;
+    try
+    {
+        await commands.WriteAsync(cmd);
+        using var cts = new CancellationTokenSource(timeout);
+        cts.Token.Register(() => tcs.TrySetCanceled());
+        return await tcs.Task;
+    }
+    catch (OperationCanceledException) { return null; }
+    finally { pendingResponses.TryRemove(cmd.Options.CorrelationId, out _); }
+}
+
 // ── Polling requests ──
 var fastRequest = RscpRequest.Create()
     .Read(Ems.PowerPv, Ems.PowerBat, Ems.PowerGrid, Ems.PowerHome)
@@ -118,6 +136,13 @@ _ = Task.Run(async () =>
         try
         {
         if (msg is not RscpDataResponse data) continue;
+
+        // Route to pending ad-hoc request if correlation ID matches
+        if (pendingResponses.TryRemove(data.CorrelationId, out var tcs))
+        {
+            tcs.TrySetResult(data);
+            continue;
+        }
 
         lastRawDump = DumpItems(data.Items);
 
@@ -365,10 +390,11 @@ app.MapPost("/api/send", async (HttpContext ctx) =>
     if (tagCount == 0)
         return Results.BadRequest(new { error = "No valid tags found" });
 
-    await commands.WriteAsync(request);
-    await Task.Delay(500);
+    var response = await SendAndAwait(request, TimeSpan.FromSeconds(5));
+    if (response is null)
+        return Results.Json(new { error = "Timeout waiting for response" });
 
-    return Results.Text(lastRawDump, "text/plain");
+    return Results.Text(DumpItems(response.Items), "text/plain");
 });
 
 app.MapPost("/api/history-query", async (HttpContext ctx) =>
@@ -378,20 +404,46 @@ app.MapPost("/api/history-query", async (HttpContext ctx) =>
     if (body is null)
         return Results.BadRequest(new { error = "Invalid request" });
 
-    var period = body.Period?.ToUpperInvariant() switch
+    var start = body.Start ?? DateTimeOffset.UtcNow.Date;
+    var (reqTag, span, interval) = (body.Period?.ToUpperInvariant()) switch
     {
-        "WEEK" => HistoryPeriod.Week,
-        "MONTH" => HistoryPeriod.Month,
-        "YEAR" => HistoryPeriod.Year,
-        _ => HistoryPeriod.Day,
+        "WEEK"  => (RscpTag.DB_REQ_HISTORY_DATA_WEEK,  TimeSpan.FromDays(7), TimeSpan.FromDays(1)),
+        "MONTH" => (RscpTag.DB_REQ_HISTORY_DATA_MONTH, TimeSpan.FromDays(31), TimeSpan.FromDays(1)),
+        "YEAR"  => (RscpTag.DB_REQ_HISTORY_DATA_YEAR,  TimeSpan.FromDays(366), TimeSpan.FromDays(31)),
+        _       => (RscpTag.DB_REQ_HISTORY_DATA_DAY,   TimeSpan.FromDays(1), TimeSpan.FromMinutes(15)),
     };
 
-    var start = body.Start ?? DateTimeOffset.UtcNow.Date;
-    var query = new HistoryQuery(start, period);
-    await commands.WriteAsync(query);
-    await Task.Delay(1000);
+    var startSec = start.ToUnixTimeSeconds();
+    var intervalSec = (long)interval.TotalSeconds;
+    var spanSec = (long)span.TotalSeconds;
+    var container = RscpDataItem.CreateContainer((uint)reqTag, [
+        RscpDataItem.FromTimestamp((uint)RscpTag.DB_REQ_HISTORY_TIME_START, start),
+        RscpDataItem.FromTimestamp((uint)RscpTag.DB_REQ_HISTORY_TIME_INTERVAL, DateTimeOffset.UnixEpoch.AddSeconds(intervalSec)),
+        RscpDataItem.FromTimestamp((uint)RscpTag.DB_REQ_HISTORY_TIME_SPAN, DateTimeOffset.UnixEpoch.AddSeconds(spanSec)),
+    ]);
+    var request = new RawCommand([container]);
 
-    return Results.Text(lastRawDump, "text/plain");
+    var response = await SendAndAwait(request, TimeSpan.FromSeconds(10));
+    if (response is null)
+        return Results.Json(new { error = "Timeout waiting for response" });
+
+    // Parse DB response into structured data points
+    var dataPoints = new List<object>();
+    foreach (var item in response.Items)
+    {
+        if (item.DataType != RscpDataType.Container) continue;
+        foreach (var child in item.ParseContainerChildren())
+        {
+            if ((RscpTag)child.Tag is not (RscpTag.DB_SUM_CONTAINER or RscpTag.DB_VALUE_CONTAINER))
+                continue;
+            if (child.DataType != RscpDataType.Container) continue;
+
+            var dp = ParseDbValueContainer(child);
+            if (dp is not null) dataPoints.Add(dp);
+        }
+    }
+
+    return Results.Json(new { period = body.Period ?? "Day", start = start.ToString("yyyy-MM-dd"), dataPoints, raw = DumpItems(response.Items) }, jsonOptions);
 });
 
 app.MapFallback(async ctx =>
@@ -400,7 +452,55 @@ app.MapFallback(async ctx =>
     await ctx.Response.SendFileAsync(Path.Combine(app.Environment.WebRootPath, "index.html"));
 });
 
+RscpDataItem MakeTimestamp(uint tag, long seconds)
+{
+    var buf = new byte[12];
+    System.Buffers.Binary.BinaryPrimitives.WriteInt64LittleEndian(buf, seconds);
+    return new RscpDataItem(tag, RscpDataType.Timestamp, buf);
+}
+
+object? ParseDbValueContainer(RscpDataItem container)
+{
+    int idx = 0;
+    double batIn = 0, batOut = 0, gridIn = 0, gridOut = 0, dcPow = 0, cons = 0;
+    var found = false;
+    foreach (var child in container.ParseContainerChildren())
+    {
+        switch ((RscpTag)child.Tag)
+        {
+            case RscpTag.DB_GRAPH_INDEX:    idx = ReadDbInt(child); break;
+            case RscpTag.DB_BAT_POWER_IN:   batIn = ReadDbDouble(child); found = true; break;
+            case RscpTag.DB_BAT_POWER_OUT:  batOut = ReadDbDouble(child); found = true; break;
+            case RscpTag.DB_DC_POWER:       dcPow = ReadDbDouble(child); found = true; break;
+            case RscpTag.DB_GRID_POWER_IN:  gridIn = ReadDbDouble(child); found = true; break;
+            case RscpTag.DB_GRID_POWER_OUT: gridOut = ReadDbDouble(child); found = true; break;
+            case RscpTag.DB_CONSUMPTION:    cons = ReadDbDouble(child); found = true; break;
+        }
+    }
+    return found ? new { index = idx, batIn, batOut, gridIn, gridOut, solar = dcPow, consumption = cons } : null;
+}
+
+int ReadDbInt(RscpDataItem item) => item.DataType switch
+{
+    RscpDataType.Int32  => System.Buffers.Binary.BinaryPrimitives.ReadInt32LittleEndian(item.Value.Span),
+    RscpDataType.UInt16 => System.Buffers.Binary.BinaryPrimitives.ReadUInt16LittleEndian(item.Value.Span),
+    _ => 0,
+};
+
+double ReadDbDouble(RscpDataItem item) => item.DataType switch
+{
+    RscpDataType.Double64 => System.Buffers.Binary.BinaryPrimitives.ReadDoubleLittleEndian(item.Value.Span),
+    RscpDataType.Float32  => System.Buffers.Binary.BinaryPrimitives.ReadSingleLittleEndian(item.Value.Span),
+    _ => 0,
+};
+
 app.Run();
 
 record SendRequest(string[]? Tags, string? DeviceNamespace, int? DeviceIndex);
 record HistoryQueryRequest(DateTimeOffset? Start, string? Period);
+
+sealed class RawCommand(IReadOnlyList<RscpDataItem> items) : IRawItemsCommand
+{
+    public RscpRequestOptions Options { get; } = new();
+    public IReadOnlyList<RscpDataItem> Items => items;
+}
