@@ -424,23 +424,29 @@ app.MapPost("/api/history-query", async (HttpContext ctx) =>
     if (response is null)
         return Results.Json(new { error = "Timeout waiting for response" });
 
-    // Parse DB response into structured data points
+    // Parse DB response: separate summary from data points
+    object? summary = null;
     var dataPoints = new List<object>();
     foreach (var item in response.Items)
     {
         if (item.DataType != RscpDataType.Container) continue;
         foreach (var child in item.ParseContainerChildren())
         {
-            if ((RscpTag)child.Tag is not (RscpTag.DB_SUM_CONTAINER or RscpTag.DB_VALUE_CONTAINER))
-                continue;
             if (child.DataType != RscpDataType.Container) continue;
-
-            var dp = ParseDbValueContainer(child);
-            if (dp is not null) dataPoints.Add(dp);
+            var tag = (RscpTag)child.Tag;
+            if (tag == RscpTag.DB_SUM_CONTAINER)
+            {
+                summary = ParseDbValueContainer(child);
+            }
+            else if (tag == RscpTag.DB_VALUE_CONTAINER)
+            {
+                var dp = ParseDbValueContainer(child);
+                if (dp is not null) dataPoints.Add(dp);
+            }
         }
     }
 
-    return Results.Json(new { period = body.Period ?? "Day", start = start.ToString("yyyy-MM-dd"), dataPoints, raw = DumpItems(response.Items) }, jsonOptions);
+    return Results.Json(new { period = body.Period ?? "Day", start = start.ToString("yyyy-MM-dd"), summary, dataPoints }, jsonOptions);
 });
 
 app.MapFallback(async ctx =>
