@@ -198,13 +198,60 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);min-height:1
 .hist-radio input{display:none}
 .hist-radio label:has(input:checked){color:var(--green);background:var(--green-dim)}
 .hist-result{flex:1;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:1rem;font-family:var(--mono);font-size:.75rem;white-space:pre-wrap;color:var(--dim);overflow-y:auto}
-/* ── Request Builder ── */
-.rb-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:.5rem}
-.rb-select{background:var(--surface);color:var(--text);border:1px solid var(--border);padding:.4rem .6rem;border-radius:6px;font-family:var(--mono);font-size:.8rem}
-.rb-chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:.75rem;min-height:2rem}
-.rb-chip{display:inline-flex;align-items:center;gap:4px;background:var(--green-dim);color:var(--green);font-family:var(--mono);font-size:.7rem;padding:.25rem .6rem;border-radius:4px}
-.rb-chip button{background:none;border:none;color:var(--green);cursor:pointer;font-size:.85rem;line-height:1;padding:0}
-.rb-response{flex:1;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:1rem;font-family:var(--mono);font-size:.75rem;white-space:pre-wrap;color:var(--dim);overflow-y:auto}
+/* ── Request Builder Workbench ── */
+.wb-layout{display:grid;grid-template-columns:280px 1fr 1fr;gap:1px;background:var(--border);border-radius:10px;overflow:hidden;flex:1;min-height:400px}
+@media(max-width:900px){.wb-layout{grid-template-columns:1fr;grid-template-rows:auto auto auto}}
+.wb-panel{background:var(--surface);padding:.75rem;overflow-y:auto;max-height:600px}
+.wb-panel-header{font-family:var(--mono);font-size:.65rem;color:var(--dim);letter-spacing:.08em;text-transform:uppercase;margin-bottom:.5rem}
+.wb-search{width:100%;background:var(--surface2);color:var(--text);border:1px solid var(--border);padding:.4rem .6rem;border-radius:6px;font-family:var(--mono);font-size:.75rem;margin-bottom:.5rem;outline:none;transition:border-color .2s}
+.wb-search:focus{border-color:var(--green)}
+.wb-search::placeholder{color:var(--muted)}
+.wb-ns-hdr{cursor:pointer;color:var(--green);font-size:.7rem;letter-spacing:.04em;padding:.25rem 0;user-select:none;display:flex;align-items:center;gap:.35rem}
+.wb-ns-hdr:hover{text-decoration:underline}
+.wb-ns-hdr::before{content:'\25B6';font-size:.55rem;transition:transform .2s;display:inline-block;width:.8em}
+.wb-ns-hdr.open::before{transform:rotate(90deg)}
+.wb-ns-count{color:var(--muted);font-size:.6rem;margin-left:auto}
+.wb-ns-items{display:none;padding-left:.5rem;border-left:1px solid var(--border);margin-left:.3rem;margin-bottom:.2rem}
+.wb-ns-items.open{display:block}
+.wb-tag{padding:.2rem .3rem;font-family:var(--mono);font-size:.7rem;cursor:pointer;display:flex;align-items:center;gap:.4rem;border-radius:4px;transition:background .15s}
+.wb-tag:hover{background:var(--green-dim)}
+.wb-tag-name{color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.wb-tag-badge{font-size:.55rem;padding:.1rem .3rem;border-radius:3px;font-family:var(--mono);letter-spacing:.02em;flex-shrink:0}
+.wb-tag-badge.read{background:rgba(92,194,68,.15);color:var(--green)}
+.wb-tag-badge.write{background:rgba(240,160,48,.15);color:var(--amber)}
+.wb-tag-badge.resp{background:rgba(107,114,128,.15);color:var(--dim)}
+.wb-detail{background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:.5rem .6rem;margin-top:.5rem;font-family:var(--mono);font-size:.65rem;color:var(--dim);line-height:1.5;display:none}
+.wb-detail.visible{display:block}
+.wb-detail-name{color:var(--green);font-size:.7rem;margin-bottom:.25rem}
+.wb-detail-row{display:flex;gap:.5rem}
+.wb-detail-label{color:var(--muted);min-width:50px}
+.wb-detail-value{color:var(--text)}
+.wb-group{margin-bottom:.6rem}
+.wb-group-hdr{font-family:var(--mono);font-size:.6rem;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:.3rem;display:flex;align-items:center;gap:.5rem}
+.wb-group-hdr .wb-idx-input{width:2.5rem;background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:4px;padding:.15rem .3rem;font-family:var(--mono);font-size:.65rem;text-align:center}
+.wb-chip{display:inline-flex;align-items:center;gap:4px;background:var(--green-dim);color:var(--green);font-family:var(--mono);font-size:.65rem;padding:.2rem .5rem;border-radius:4px;margin:.15rem .3rem .15rem 0}
+.wb-chip button{background:none;border:none;color:var(--green);cursor:pointer;font-size:.8rem;line-height:1;padding:0;margin-left:2px;opacity:.6;transition:opacity .15s}
+.wb-chip button:hover{opacity:1}
+.wb-actions{display:flex;gap:8px;margin-top:.5rem;padding-top:.5rem;border-top:1px solid var(--border)}
+.wb-btn{background:var(--green);color:#000;border:none;padding:.4rem .8rem;border-radius:6px;font-family:var(--mono);font-size:.75rem;cursor:pointer;font-weight:500;transition:filter .15s}
+.wb-btn:hover{filter:brightness(1.1)}
+.wb-btn:disabled{opacity:.4;cursor:default}
+.wb-btn.secondary{background:none;color:var(--dim);border:1px solid var(--border)}
+.wb-btn.secondary:hover{color:var(--text);border-color:var(--dim)}
+.wb-empty{color:var(--muted);font-family:var(--mono);font-size:.7rem;text-align:center;padding:2rem .5rem}
+.wb-resp-item{margin-bottom:.3rem}
+.wb-resp-tag{color:var(--green);font-family:var(--mono);font-size:.7rem;cursor:pointer;user-select:none;display:flex;align-items:center;gap:.4rem;padding:.15rem 0}
+.wb-resp-tag:hover{text-decoration:underline}
+.wb-resp-tag::before{content:'\25B6';font-size:.5rem;transition:transform .2s;display:inline-block;width:.7em}
+.wb-resp-tag.open::before{transform:rotate(90deg)}
+.wb-resp-type{color:var(--dim);font-size:.6rem}
+.wb-resp-val{color:var(--amber);font-family:var(--mono);font-size:.75rem;font-weight:500;margin-left:.3rem}
+.wb-resp-hex{color:var(--muted);font-family:var(--mono);font-size:.6rem;margin-left:.5rem}
+.wb-resp-detail{padding-left:1rem;border-left:1px solid var(--border);margin-left:.3rem;display:none}
+.wb-resp-detail.open{display:block}
+.wb-resp-children{padding-left:1rem;border-left:1px solid var(--border);margin-left:.3rem}
+.wb-resp-error{color:var(--red);font-family:var(--mono);font-size:.7rem;padding:.3rem 0}
+.wb-sending{color:var(--amber);font-family:var(--mono);font-size:.7rem;text-align:center;padding:1rem}
 /* ── Info bar ── */
 .info-bar{font-family:var(--mono);font-size:.65rem;color:var(--muted);margin-left:.75rem;letter-spacing:.02em}
 

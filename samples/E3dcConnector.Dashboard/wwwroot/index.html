@@ -239,17 +239,29 @@
 
 <!-- ── Request Builder Tab ── -->
 <div class="tab-pane" id="tab-builder">
-  <div class="rb-row">
-    <select class="rb-select" id="rbNs"><option value="">Namespace...</option></select>
-    <select class="rb-select" id="rbTag"><option value="">Tag...</option></select>
-    <input class="rb-select" id="rbIdx" type="number" min="0" value="0" style="width:5rem;display:none" placeholder="Index">
-    <button class="exp-btn" onclick="rbAdd()">Add</button>
+  <div class="wb-layout">
+    <!-- Left: Tag Browser -->
+    <div class="wb-panel" id="wbBrowser">
+      <div class="wb-panel-header">Tag Browser</div>
+      <input class="wb-search" id="wbSearch" type="text" placeholder="Search tags...">
+      <div id="wbTree"></div>
+      <div class="wb-detail" id="wbDetail"></div>
+    </div>
+    <!-- Center: Request Composer -->
+    <div class="wb-panel" id="wbComposer">
+      <div class="wb-panel-header">Request Composer</div>
+      <div id="wbRequest"><div class="wb-empty">Click tags in the browser to compose a request</div></div>
+      <div class="wb-actions">
+        <button class="wb-btn" id="wbSend" disabled>Send</button>
+        <button class="wb-btn secondary" id="wbClear">Clear</button>
+      </div>
+    </div>
+    <!-- Right: Response Viewer -->
+    <div class="wb-panel" id="wbResponse">
+      <div class="wb-panel-header">Response</div>
+      <div id="wbResult"><div class="wb-empty">Send a request to see the response</div></div>
+    </div>
   </div>
-  <div class="rb-chips" id="rbChips"></div>
-  <div class="rb-row">
-    <button class="exp-btn" onclick="rbSend()">Send</button>
-  </div>
-  <div class="rb-response" id="rbResult">Add tags above, then click Send.</div>
 </div>
 
 </div><!-- end shell -->
