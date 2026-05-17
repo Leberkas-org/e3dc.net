@@ -23,7 +23,7 @@
       "wrapResponses": false
     },
     "openApiToTypeScriptClient": {
-      "className": "E3dcApi",
+      "className": "{controller}Client",
       "moduleName": "",
       "namespace": "",
       "typeScriptVersion": 0,
@@ -34,7 +34,7 @@
       "useSingletonProvider": false,
       "serviceHost": "",
       "serviceSchemes": [],
-      "output": "wwwroot/js/api-client.generated.js",
+      "output": "wwwroot/js/api-client.generated.ts",
       "generateClientClasses": true,
       "generateClientInterfaces": false,
       "generateOptionalParameters": true,
