@@ -3,14 +3,13 @@
 import { $, state } from './utils.js';
 import { update, drawChart, sysReboot, sysRestart } from './dashboard.js';
 import { sendHistoryQuery, histStep, histGoTo, initHistoryListeners } from './history.js';
-import { buildExpTree, toggleExpNs, sendCustomTag } from './explorer.js';
+import { buildExpTree, toggleExpNs } from './explorer.js';
 import { loadTags, rbAdd, rbRemove, rbSend, isTagDataLoaded, initBuilderListeners } from './builder.js';
 
 // Register onclick handlers on window (called from HTML onclick attributes)
 window.sendHistoryQuery = sendHistoryQuery;
 window.histStep = histStep;
 window.histGoTo = histGoTo;
-window.sendCustomTag = sendCustomTag;
 window.toggleExpNs = toggleExpNs;
 window.rbAdd = rbAdd;
 window.rbRemove = rbRemove;

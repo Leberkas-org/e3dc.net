@@ -1,4 +1,4 @@
-// Explorer tab: buildExpTree, sendCustomTag, renderItemTree
+// Explorer tab: live tag tree
 
 import { $, state } from './utils.js';
 
@@ -36,28 +36,3 @@ export function buildExpTree() {
 }
 
 export function toggleExpNs(el, ns) { expNsState[ns] = !el.classList.contains('open'); buildExpTree(); }
-
-export function renderItemTree(items, depth) {
-  var html = '';
-  for (var i = 0; i < items.length; i++) {
-    var it = items[i];
-    html += '<div class="exp-item" style="padding-left:' + (depth * 1) + 'rem">';
-    html += '<span class="exp-item-tag">' + it.tag + '</span>';
-    html += '<span class="exp-item-type">' + it.type + '</span>';
-    if (it.value != null) html += '<span class="exp-item-val">' + it.value + '</span>';
-    html += '<span class="exp-item-hex">' + it.hex + '</span>';
-    html += '</div>';
-    if (it.children) html += renderItemTree(it.children, depth + 1);
-  }
-  return html;
-}
-
-export function sendCustomTag() {
-  var tag = $('expInput').value.trim(); if (!tag) return;
-  $('expResult').style.display = 'block'; $('expResult').innerHTML = '<span style="color:var(--dim)">Sending...</span>';
-  fetch('/api/send', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ tags: [tag] }) })
-    .then(r => r.json()).then(d => {
-      if (d.error) { $('expResult').innerHTML = '<span style="color:var(--red)">' + d.error + '</span>'; return; }
-      $('expResult').innerHTML = renderItemTree(d.items || [], 0);
-    }).catch(e => { $('expResult').innerHTML = '<span style="color:var(--red)">Error: ' + e + '</span>'; });
-}
