@@ -170,11 +170,30 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);min-height:1
 .hist-nav:hover{border-color:var(--green);color:var(--green)}
 .hist-date-btn{background:var(--surface);color:var(--text);border:1px solid var(--border);padding:.4rem .8rem;border-radius:6px;font-family:var(--mono);font-size:.8rem;cursor:pointer;min-width:130px;text-align:center;transition:border-color .2s}
 .hist-date-btn:hover,.hist-date-btn:focus{border-color:var(--green);color:var(--green);outline:none}
-.flatpickr-calendar{font-family:var(--mono)!important;border-color:var(--border)!important}
-.flatpickr-calendar .flatpickr-day.selected{background:var(--green)!important;border-color:var(--green)!important}
-.flatpickr-calendar .flatpickr-day:hover{background:var(--green-dim)!important}
-.flatpickr-calendar .flatpickr-monthSelect-month.selected{background:var(--green)!important}
-.flatpickr-calendar .flatpickr-monthSelect-month:hover{background:var(--green-dim)!important}
+.flatpickr-calendar{font-family:var(--mono)!important;background:var(--surface)!important;border:1px solid var(--border)!important;box-shadow:0 8px 24px rgba(0,0,0,.5)!important;border-radius:8px!important}
+.flatpickr-calendar .flatpickr-months{background:var(--surface2)!important;border-radius:8px 8px 0 0!important}
+.flatpickr-calendar .flatpickr-months .flatpickr-month{color:var(--text)!important;fill:var(--text)!important}
+.flatpickr-calendar .flatpickr-current-month .cur-month{color:var(--text)!important;font-weight:500!important}
+.flatpickr-calendar .flatpickr-current-month .numInputWrapper span{border-color:var(--dim)!important}
+.flatpickr-calendar .flatpickr-current-month input.cur-year{color:var(--text)!important}
+.flatpickr-calendar .flatpickr-months .flatpickr-prev-month,.flatpickr-calendar .flatpickr-months .flatpickr-next-month{color:var(--dim)!important;fill:var(--dim)!important}
+.flatpickr-calendar .flatpickr-months .flatpickr-prev-month:hover,.flatpickr-calendar .flatpickr-months .flatpickr-next-month:hover{color:var(--green)!important;fill:var(--green)!important}
+.flatpickr-calendar .flatpickr-months .flatpickr-prev-month svg,.flatpickr-calendar .flatpickr-months .flatpickr-next-month svg{fill:inherit!important}
+.flatpickr-calendar .flatpickr-weekdays{background:var(--surface2)!important}
+.flatpickr-calendar span.flatpickr-weekday{color:var(--dim)!important;font-weight:400!important}
+.flatpickr-calendar .flatpickr-days{background:var(--surface)!important}
+.flatpickr-calendar .dayContainer{background:var(--surface)!important}
+.flatpickr-calendar .flatpickr-day{color:var(--text)!important;border-color:transparent!important}
+.flatpickr-calendar .flatpickr-day:hover{background:var(--green-dim)!important;border-color:var(--green)!important}
+.flatpickr-calendar .flatpickr-day.selected,.flatpickr-calendar .flatpickr-day.selected:hover{background:var(--green)!important;color:#000!important;border-color:var(--green)!important}
+.flatpickr-calendar .flatpickr-day.today{border-color:var(--dim)!important}
+.flatpickr-calendar .flatpickr-day.today:hover{background:var(--green-dim)!important;border-color:var(--green)!important}
+.flatpickr-calendar .flatpickr-day.prevMonthDay,.flatpickr-calendar .flatpickr-day.nextMonthDay{color:var(--muted)!important}
+.flatpickr-calendar .flatpickr-day.flatpickr-disabled{color:var(--muted)!important;opacity:.4!important}
+.flatpickr-monthSelect-months{background:var(--surface)!important}
+.flatpickr-monthSelect-month{color:var(--text)!important;background:var(--surface)!important;border-radius:6px!important}
+.flatpickr-monthSelect-month:hover{background:var(--green-dim)!important;color:var(--green)!important}
+.flatpickr-monthSelect-month.selected{background:var(--green)!important;color:#000!important}
 .hist-quick{background:none;color:var(--dim);border:1px solid var(--border);padding:.3rem .6rem;border-radius:6px;font-family:var(--mono);font-size:.7rem;cursor:pointer;transition:color .2s,border-color .2s}
 .hist-quick:hover{color:var(--green);border-color:var(--green)}
 .hist-input{background:var(--surface);color:var(--text);border:1px solid var(--border);padding:.4rem .6rem;border-radius:6px;font-family:var(--mono);font-size:.8rem}
@@ -652,6 +671,8 @@ function histLabel(idx, period, startStr){
 }
 function drawHistChart(pts,period,startStr){
   var c=$('histChart');if(!c)return;
+  // Deduplicate by index (E3DC sometimes returns duplicate last point)
+  var seen={};pts=pts.filter(function(p){if(seen[p.index])return false;seen[p.index]=true;return true});
   var ctx=c.getContext('2d'),dpr=devicePixelRatio||1;
   var r=c.parentElement.getBoundingClientRect(),W=r.width,H=250;
   c.width=W*dpr;c.height=H*dpr;c.style.width=W+'px';c.style.height=H+'px';
