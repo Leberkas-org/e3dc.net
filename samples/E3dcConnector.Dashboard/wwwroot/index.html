@@ -655,7 +655,7 @@ function sendHistoryQuery(){
   fetch('/api/history-query',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({start:date,period:period})})
     .then(r=>r.json()).then(d=>{
       $('histTitle').textContent='Energy History — '+d.start+' ('+d.period+')';
-      if(!d.dataPoints||!d.dataPoints.length){$('histResult').style.display='block';$('histResult').textContent='No data for this period.';return}
+      if(!d.dataPoints||!d.dataPoints.length){$('histResult').style.display='block';$('histResult').textContent='No data for this period.';clearHistChart();return}
       drawHistChart(d.dataPoints, d.period, d.start);
     }).catch(e=>{$('histTitle').textContent='Energy History';$('histResult').style.display='block';$('histResult').textContent='Error: '+e});
 }
@@ -669,6 +669,7 @@ function histLabel(i, period, startStr){
   if(period==='year'){var d=new Date(s);d.setMonth(d.getMonth()+i);return monthNames[d.getMonth()]}
   return ''+i;
 }
+function clearHistChart(){var c=$('histChart');if(!c)return;var ctx=c.getContext('2d');ctx.clearRect(0,0,c.width,c.height)}
 function drawHistChart(pts,period,startStr){
   var c=$('histChart');if(!c)return;
   var ctx=c.getContext('2d'),dpr=devicePixelRatio||1;
