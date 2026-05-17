@@ -471,7 +471,7 @@ object? ParseDbValueContainer(RscpDataItem container)
     {
         switch ((RscpTag)child.Tag)
         {
-            case RscpTag.DB_GRAPH_INDEX:    idx = ReadDbInt(child); break;
+            case RscpTag.DB_GRAPH_INDEX:    idx = (int)Math.Round(ReadDbDouble(child)); break;
             case RscpTag.DB_BAT_POWER_IN:   batIn = ReadDbDouble(child); found = true; break;
             case RscpTag.DB_BAT_POWER_OUT:  batOut = ReadDbDouble(child); found = true; break;
             case RscpTag.DB_DC_POWER:       dcPow = ReadDbDouble(child); found = true; break;
