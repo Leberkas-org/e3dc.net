@@ -574,10 +574,20 @@ function sendHistoryQuery(){
     .then(r=>r.json()).then(d=>{
       $('histTitle').textContent='Energy History — '+d.start+' ('+d.period+')';
       if(!d.dataPoints||!d.dataPoints.length){$('histResult').style.display='block';$('histResult').textContent='No data for this period.';return}
-      drawHistChart(d.dataPoints);
+      drawHistChart(d.dataPoints, d.period, d.start);
     }).catch(e=>{$('histTitle').textContent='Energy History';$('histResult').style.display='block';$('histResult').textContent='Error: '+e});
 }
-function drawHistChart(pts){
+function histLabel(idx, period, startStr){
+  var s=new Date(startStr+'T00:00:00');
+  var days=['Mo','Tu','We','Th','Fr','Sa','Su'];
+  var months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  if(period==='day'){var h=Math.floor(idx*15/60),m=(idx*15)%60;return (h<10?'0':'')+h+':'+(m<10?'0':'')+m}
+  if(period==='week'){var d=new Date(s);d.setDate(d.getDate()+idx);return days[d.getDay()===0?6:d.getDay()-1]}
+  if(period==='month')return ''+(idx+1);
+  if(period==='year')return months[idx]||'';
+  return ''+idx;
+}
+function drawHistChart(pts,period,startStr){
   var c=$('histChart');if(!c)return;
   var ctx=c.getContext('2d'),dpr=devicePixelRatio||1;
   var r=c.parentElement.getBoundingClientRect(),W=r.width,H=250;
@@ -604,7 +614,7 @@ function drawHistChart(pts){
     // X label
     if(n<=31||(i%Math.ceil(n/12)===0)){
       ctx.fillStyle='#6b7280';ctx.font='9px DM Mono';ctx.textAlign='center';
-      ctx.fillText(pts[i].index,x+gw/2,H-p.b+14);
+      ctx.fillText(histLabel(pts[i].index,period,startStr),x+gw/2,H-p.b+14);
     }
   }
 }
