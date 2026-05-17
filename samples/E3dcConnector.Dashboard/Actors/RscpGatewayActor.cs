@@ -33,7 +33,9 @@ public sealed class RscpGatewayActor : ReceiveActor, IWithTimers
 
     private readonly IActorRef _snapshotActor;
     private readonly ChannelWriter<IRscpCommand> _commands;
-    private readonly ConcurrentDictionary<string, IActorRef> _pendingRequests = new();
+    private readonly ConcurrentDictionary<string, PendingRequest> _pendingRequests = new();
+
+    private sealed record PendingRequest(IActorRef Sender, Func<RscpDataResponse, object> Convert);
 
     public RscpGatewayActor(E3dcOptions options, IActorRef snapshotActor, IMaterializer materializer)
     {
@@ -70,11 +72,17 @@ public sealed class RscpGatewayActor : ReceiveActor, IWithTimers
 
     private void HandleResponse(RscpDataResponse data)
     {
-        // Route to pending ad-hoc caller if correlation ID matches
-        if (_pendingRequests.TryRemove(data.CorrelationId, out var sender))
+        if (_pendingRequests.TryRemove(data.CorrelationId, out var pending))
         {
             Timers.Cancel(data.CorrelationId);
-            sender.Tell(data);
+            try
+            {
+                pending.Sender.Tell(pending.Convert(data));
+            }
+            catch (Exception ex)
+            {
+                pending.Sender.Tell(new Status.Failure(ex));
+            }
             return;
         }
 
@@ -163,7 +171,8 @@ public sealed class RscpGatewayActor : ReceiveActor, IWithTimers
         }
 
         var correlationId = request.Options.CorrelationId;
-        _pendingRequests[correlationId] = Sender;
+        _pendingRequests[correlationId] = new PendingRequest(Sender, data =>
+            new SendTagsResponse(new Generated.SendResponse { Items = ItemsToJson(data.Items) }, null));
         _ = _commands.WriteAsync(request).AsTask();
         Timers.StartSingleTimer(correlationId, new AdHocTimeout(correlationId), TimeSpan.FromSeconds(5));
     }
@@ -200,15 +209,45 @@ public sealed class RscpGatewayActor : ReceiveActor, IWithTimers
         var request = new RawCommand([container]);
 
         var correlationId = request.Options.CorrelationId;
-        _pendingRequests[correlationId] = Sender;
+        var startStr = start.ToString("yyyy-MM-dd");
+        var periodOut = body.Period?.ToString() ?? "Day";
+        _pendingRequests[correlationId] = new PendingRequest(Sender, data =>
+        {
+            Generated.HistoryDataPoint? summary = null;
+            var dataPoints = new List<Generated.HistoryDataPoint>();
+            foreach (var item in data.Items)
+            {
+                if (item.DataType != RscpDataType.Container) continue;
+                foreach (var child in item.ParseContainerChildren())
+                {
+                    if (child.DataType != RscpDataType.Container) continue;
+                    var tag = (RscpTag)child.Tag;
+                    if (tag == RscpTag.DB_SUM_CONTAINER)
+                        summary = ParseDbValueContainer(child);
+                    else if (tag == RscpTag.DB_VALUE_CONTAINER)
+                    {
+                        var dp = ParseDbValueContainer(child);
+                        if (dp is not null) dataPoints.Add(dp);
+                    }
+                }
+            }
+            return new HistoryQueryResult(new Generated.HistoryQueryResponse
+            {
+                Period = periodOut,
+                Start = startStr,
+                Summary = summary,
+                DataPoints = dataPoints,
+                Count = dataPoints.Count,
+            }, null);
+        });
         _ = _commands.WriteAsync(request).AsTask();
         Timers.StartSingleTimer(correlationId, new AdHocTimeout(correlationId), TimeSpan.FromSeconds(10));
     }
 
     private void HandleTimeout(AdHocTimeout msg)
     {
-        if (_pendingRequests.TryRemove(msg.CorrelationId, out var sender))
-            sender.Tell(new Status.Failure(new TimeoutException($"RSCP request timed out (correlationId={msg.CorrelationId})")));
+        if (_pendingRequests.TryRemove(msg.CorrelationId, out var pending))
+            pending.Sender.Tell(new Status.Failure(new TimeoutException($"RSCP request timed out (correlationId={msg.CorrelationId})")));
     }
 
     // ── Called by SnapshotActor when it receives a RscpDataResponse from pending requests ──

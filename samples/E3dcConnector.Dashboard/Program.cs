@@ -28,7 +28,7 @@ builder.Services.AddSingleton(new ActorRegistry
     Gateway = gatewayActor,
     Polling = pollingActor,
 });
-builder.Services.AddControllers();
+builder.Services.AddControllers().AddNewtonsoftJson();
 
 var app = builder.Build();
 
