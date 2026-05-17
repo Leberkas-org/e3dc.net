@@ -722,12 +722,13 @@ function sendHistoryQuery(){
 }
 function histLabel(i, period, startStr){
   var s=new Date(startStr+'T00:00:00');
+  var p=period.toLowerCase();
   var dayNames=['Mo','Tu','We','Th','Fr','Sa','Su'];
   var monthNames=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-  if(period==='day'){var h=Math.floor(i*15/60),m=(i*15)%60;return (h<10?'0':'')+h+':'+(m<10?'0':'')+m}
-  if(period==='week'){var d=new Date(s);d.setDate(d.getDate()+i);return dayNames[d.getDay()===0?6:d.getDay()-1]}
-  if(period==='month'){var d=new Date(s);d.setDate(d.getDate()+i);return ''+d.getDate()}
-  if(period==='year'){var d=new Date(s);d.setMonth(d.getMonth()+i);return monthNames[d.getMonth()]}
+  if(p==='day'){var h=Math.floor(i*15/60),m=(i*15)%60;return (h<10?'0':'')+h+':'+(m<10?'0':'')+m}
+  if(p==='week'){var d=new Date(s);d.setDate(d.getDate()+i);return dayNames[d.getDay()===0?6:d.getDay()-1]}
+  if(p==='month'){var d=new Date(s);d.setDate(d.getDate()+i);return ''+d.getDate()}
+  if(p==='year'){var d=new Date(s);d.setMonth(d.getMonth()+i);return monthNames[d.getMonth()]}
   return ''+i;
 }
 function clearHistChart(){var c=$('histChart');if(!c)return;var ctx=c.getContext('2d');ctx.clearRect(0,0,c.width,c.height)}
