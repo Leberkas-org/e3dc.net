@@ -1,12 +1,13 @@
 using Akka.Actor;
 using E3dcConnector.Dashboard.Actors;
+using E3dcConnector.Dashboard.Configuration;
 using E3dcConnector.Tags;
 using Microsoft.AspNetCore.Mvc;
 using Generated = E3dcConnector.Dashboard.Controllers.Generated;
 
 namespace E3dcConnector.Dashboard.Controllers;
 
-public class RscpController(IActorRef gatewayActor) : Generated.RscpControllerBase
+public class RscpController(ActorRegistry actors) : Generated.RscpControllerBase
 {
     private static readonly TimeSpan AskTimeout = TimeSpan.FromSeconds(10);
 
@@ -37,7 +38,7 @@ public class RscpController(IActorRef gatewayActor) : Generated.RscpControllerBa
 
     public override async Task<ActionResult<Generated.SendResponse>> SendRscpRequest(Generated.SendRequest body, CancellationToken ct)
     {
-        var result = await gatewayActor.Ask<SendTagsResponse>(new SendTagsRequest(body), AskTimeout);
+        var result = await actors.Gateway.Ask<SendTagsResponse>(new SendTagsRequest(body), AskTimeout);
         if (result.Error is not null)
             return BadRequest(new Generated.ErrorResponse { Error = result.Error });
         return Ok(result.Response!);
@@ -45,7 +46,7 @@ public class RscpController(IActorRef gatewayActor) : Generated.RscpControllerBa
 
     public override async Task<ActionResult<Generated.HistoryQueryResponse>> QueryHistory(Generated.HistoryQueryRequest body, CancellationToken ct)
     {
-        var result = await gatewayActor.Ask<HistoryQueryResult>(new HistoryQueryMessage(body), AskTimeout);
+        var result = await actors.Gateway.Ask<HistoryQueryResult>(new HistoryQueryMessage(body), AskTimeout);
         if (result.Error is not null)
             return BadRequest(new Generated.ErrorResponse { Error = result.Error });
         return Ok(result.Response!);
