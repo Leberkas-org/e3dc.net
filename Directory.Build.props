@@ -1,0 +1,13 @@
+<Project>
+  <PropertyGroup>
+    <Authors>Christian Dirnhofer</Authors>
+    <Company>diit.de</Company>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageProjectUrl>https://github.com/Leberkas-org/e3dc.net</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/Leberkas-org/e3dc.net</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageTags>e3dc;rscp;solar;battery;energy;akka;streams;home-automation;s10</PackageTags>
+    <PackageIcon>icon.png</PackageIcon>
+    <Copyright>Copyright (c) 2026 Christian Dirnhofer</Copyright>
+  </PropertyGroup>
+</Project>

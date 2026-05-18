@@ -1,12 +1,12 @@
-# Imperative Client
+﻿# Imperative Client
 
 The `RscpClient` provides async/await request-response communication using the fluent `RscpRequest` builder.
 
 ## Reading Data
 
 ```csharp
-using E3dcConnector.Messages;
-using E3dcConnector.Messages.Descriptors;
+using E3dc.Messages;
+using E3dc.Messages.Descriptors;
 
 var response = await client.SendAsync(
     RscpRequest.Create()

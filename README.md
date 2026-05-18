@@ -1,6 +1,13 @@
-# E3DC RSCP Connector
+﻿# E3dc
+
+[![NuGet](https://img.shields.io/nuget/v/E3dc?label=E3dc&logo=nuget)](https://www.nuget.org/packages/E3dc)
+[![Docker](https://img.shields.io/badge/ghcr.io-e3dc--dashboard-blue?logo=docker)](https://ghcr.io/leberkas-org/e3dc-dashboard)
+[![License](https://img.shields.io/github/license/Leberkas-org/E3dc)](LICENSE)
+[![Build](https://img.shields.io/github/actions/workflow/status/Leberkas-org/E3dc/docker.yml?label=build&logo=github)](https://github.com/Leberkas-org/E3dc/actions)
 
 A .NET 10 library for communicating with E3DC S10 home battery systems via the proprietary RSCP (Remote Storage Control Protocol) over TCP. Includes a full-featured sample dashboard application.
+
+![E3dc](icon.png)
 
 ## Overview
 
@@ -53,10 +60,10 @@ git clone https://github.com/your-org/e3dc-connector.git
 cd e3dc-connector
 
 # Configure — fill in your E3DC credentials
-# Edit samples/E3dcConnector.Dashboard/appsettings.json
+# Edit samples/E3dc.Dashboard/appsettings.json
 
 # Run
-dotnet run --project samples/E3dcConnector.Dashboard
+dotnet run --project samples/E3dc.Dashboard
 
 # Or with Docker
 cd samples && docker compose up -d --build
@@ -66,18 +73,17 @@ cd samples && docker compose up -d --build
 
 ```
 src/
-  E3dcConnector/              Core RSCP protocol library (framing, encryption, request builder)
-  E3dcConnector.Typed/        Typed snapshots and response parsing
+  E3dc/              Core RSCP protocol library (framing, encryption, request builder, typed snapshots)
 samples/
-  E3dcConnector.Dashboard/    Full Blazor dashboard application
+  E3dc.Dashboard/    Full Blazor dashboard application
 docs/                         VitePress documentation site
 test/
-  E3dcConnector.Tests/        Unit tests
+  E3dc.Tests/        Unit tests
 ```
 
 ## Configuration
 
-Edit `samples/E3dcConnector.Dashboard/appsettings.json`:
+Edit `samples/E3dc.Dashboard/appsettings.json`:
 
 ```json
 {

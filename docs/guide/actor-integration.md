@@ -1,4 +1,4 @@
-# Actor Integration
+﻿# Actor Integration
 
 Use the `ConnectionActor` pattern for actor-based systems (digital twins, supervision).
 
@@ -55,4 +55,4 @@ actor.Tell(new ConnectionActor.Subscribe(Self));
 
 The ConnectionActor watches subscribers and removes them on termination.
 
-See the `E3dcConnector.ActorSample` project for a complete working example.
+See the `E3dc.ActorSample` project for a complete working example.

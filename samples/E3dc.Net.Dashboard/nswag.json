@@ -1,0 +1,47 @@
+﻿{
+  "runtime": "Net100",
+  "documentGenerator": {
+    "fromDocument": {
+      "url": "openapi.yaml",
+      "output": null
+    }
+  },
+  "codeGenerators": {
+    "openApiToCSharpController": {
+      "controllerStyle": "Abstract",
+      "controllerTarget": "AspNetCore",
+      "useCancellationToken": true,
+      "useActionResultType": true,
+      "generateModelValidationAttributes": false,
+      "operationGenerationMode": "MultipleClientsFromFirstTagAndOperationId",
+      "className": "{controller}",
+      "namespace": "E3dc.Dashboard.Controllers.Generated",
+      "output": "Controllers/Generated/Controllers.g.cs",
+      "generateOptionalParameters": true,
+      "generateJsonMethods": false,
+      "generateResponseClasses": false,
+      "wrapResponses": false
+    },
+    "openApiToTypeScriptClient": {
+      "className": "{controller}Client",
+      "moduleName": "",
+      "namespace": "",
+      "typeScriptVersion": 0,
+      "template": "Fetch",
+      "promiseType": "Promise",
+      "httpClass": "HttpClient",
+      "withCredentials": false,
+      "useSingletonProvider": false,
+      "serviceHost": "",
+      "serviceSchemes": [],
+      "output": "wwwroot/js/api-client.generated.ts",
+      "generateClientClasses": true,
+      "generateClientInterfaces": false,
+      "generateOptionalParameters": true,
+      "wrapResponses": false,
+      "generateResponseClasses": false,
+      "operationGenerationMode": "MultipleClientsFromFirstTagAndOperationId",
+      "markOptionalProperties": true
+    }
+  }
+}

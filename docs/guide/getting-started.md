@@ -1,12 +1,12 @@
-# Getting Started
+﻿# Getting Started
 
 ## Installation
 
 Add the NuGet package to your project:
 
 ```bash
-dotnet add package E3dcConnector
-dotnet add package E3dcConnector.Typed
+dotnet add package E3dc
+dotnet add package E3dc.Typed
 ```
 
 ## First Query
@@ -14,11 +14,11 @@ dotnet add package E3dcConnector.Typed
 Read the current PV power from your E3DC S10 in 10 lines:
 
 ```csharp
-using E3dcConnector.Client;
-using E3dcConnector.Messages;
-using E3dcConnector.Messages.Descriptors;
-using E3dcConnector.Messages.Responses;
-using E3dcConnector.Typed;
+using E3dc.Client;
+using E3dc.Messages;
+using E3dc.Messages.Descriptors;
+using E3dc.Messages.Responses;
+using E3dc.Typed;
 
 var client = new RscpClientBuilder()
     .Connect("192.168.1.100")

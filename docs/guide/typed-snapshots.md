@@ -1,6 +1,6 @@
-# Typed Snapshots
+﻿# Typed Snapshots
 
-The `E3dcConnector.Typed` package provides strongly-typed records parsed from raw RSCP responses.
+The `E3dc.Typed` package provides strongly-typed records parsed from raw RSCP responses.
 
 ## Available Snapshots
 

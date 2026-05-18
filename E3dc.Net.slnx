@@ -1,0 +1,11 @@
+﻿<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/E3dc.Net/E3dc.Net.csproj" />
+  </Folder>
+  <Folder Name="/test/">
+    <Project Path="test/E3dc.Net.Tests/E3dc.Net.Tests.csproj" />
+  </Folder>
+  <Folder Name="/samples/">
+    <Project Path="samples/E3dc.Net.Dashboard/E3dc.Net.Dashboard.csproj" />
+  </Folder>
+</Solution>
