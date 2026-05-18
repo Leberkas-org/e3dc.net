@@ -17,4 +17,6 @@ public static class Pm
     public static readonly IndexedTag EnergyL1 = new(RscpTag.PM_REQ_ENERGY_L1);
     public static readonly IndexedTag EnergyL2 = new(RscpTag.PM_REQ_ENERGY_L2);
     public static readonly IndexedTag EnergyL3 = new(RscpTag.PM_REQ_ENERGY_L3);
+
+    public static readonly IndexedTag[] All = [PowerL1, PowerL2, PowerL3, VoltageL1, VoltageL2, VoltageL3, EnergyL1, EnergyL2, EnergyL3];
 }

@@ -17,4 +17,6 @@ public static class Pvi
     public static readonly IndexedTag DcPower = new(RscpTag.PVI_REQ_DC_POWER);
     public static readonly IndexedTag DcVoltage = new(RscpTag.PVI_REQ_DC_VOLTAGE);
     public static readonly IndexedTag DcCurrent = new(RscpTag.PVI_REQ_DC_CURRENT);
+
+    public static readonly IndexedTag[] All = [OnGrid, State, AcPower, AcVoltage, AcCurrent, AcFrequency, DcPower, DcVoltage, DcCurrent];
 }

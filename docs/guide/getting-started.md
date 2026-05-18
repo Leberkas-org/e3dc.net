@@ -2,23 +2,20 @@
 
 ## Installation
 
-Add the NuGet package to your project:
-
 ```bash
-dotnet add package E3dc
-dotnet add package E3dc.Typed
+dotnet add package E3dc.Net
 ```
 
 ## First Query
 
-Read the current PV power from your E3DC S10 in 10 lines:
+Read the current PV power from your E3DC S10:
 
 ```csharp
+using E3dc;
 using E3dc.Client;
+using E3dc.Descriptors;
 using E3dc.Messages;
-using E3dc.Messages.Descriptors;
 using E3dc.Messages.Responses;
-using E3dc.Typed;
 
 var client = new RscpClientBuilder()
     .Connect("192.168.1.100")
@@ -38,6 +35,26 @@ await using (client)
         Console.WriteLine($"PV: {snapshot?.PvWatts} W, SOC: {snapshot?.Soc:F1} %");
     }
 }
+```
+
+### Reading All Tags
+
+Each descriptor has an `All` array containing all read tags for that namespace:
+
+```csharp
+// Read everything from EMS
+var request = RscpRequest.Create().Read(Ems.All);
+
+// Read all battery data from device 0
+var request = RscpRequest.Create()
+    .FromDevice(Bat.Device, 0, b => b.Read(Bat.All));
+
+// Combine multiple namespaces
+var request = RscpRequest.Create()
+    .Read(Ems.All)
+    .Read(Ep.All)
+    .FromDevice(Bat.Device, 0, b => b.Read(Bat.All))
+    .FromDevice(Pvi.Device, 0, b => b.Read(Pvi.All));
 ```
 
 ## Device Setup

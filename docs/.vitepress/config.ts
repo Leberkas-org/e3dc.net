@@ -1,6 +1,7 @@
 import { defineConfig } from 'vitepress'
 
 export default defineConfig({
+  base: process.env.VITEPRESS_BASE || '/',
   title: 'E3DC Connector',
   description: 'Akka.Streams RSCP client for E3DC S10 Pro',
   vue: {
@@ -11,7 +12,7 @@ export default defineConfig({
     },
   },
   head: [
-    ['script', { src: '/likec4-views.js', defer: 'true' }],
+    ['script', { src: `${process.env.VITEPRESS_BASE || '/'}likec4-views.js`, defer: 'true' }],
     ['style', {}, `
       :root {
         --vp-c-brand-1: #4aad35;

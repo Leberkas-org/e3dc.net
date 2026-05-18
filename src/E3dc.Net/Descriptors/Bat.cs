@@ -15,4 +15,6 @@ public static class Bat
     public static readonly IndexedTag StatusCode = new(RscpTag.BAT_REQ_STATUS_CODE);
     public static readonly IndexedTag ErrorCode = new(RscpTag.BAT_REQ_ERROR_CODE);
     public static readonly IndexedTag DcbCount = new(RscpTag.BAT_REQ_DCB_COUNT);
+
+    public static readonly IndexedTag[] All = [Rsoc, ModuleVoltage, Current, ChargeCycles, StatusCode, ErrorCode, DcbCount];
 }

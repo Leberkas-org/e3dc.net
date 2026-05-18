@@ -16,4 +16,6 @@ public static class Wb
     public static readonly IndexedTag PmPowerL1 = new(RscpTag.WB_REQ_PM_POWER_L1);
     public static readonly IndexedTag PmPowerL2 = new(RscpTag.WB_REQ_PM_POWER_L2);
     public static readonly IndexedTag PmPowerL3 = new(RscpTag.WB_REQ_PM_POWER_L3);
+
+    public static readonly IndexedTag[] All = [EnergyAll, EnergySolar, Status, ErrorCode, Mode, PmPowerL1, PmPowerL2, PmPowerL3];
 }

@@ -4,7 +4,7 @@ obj/
 *.user
 *.suo
 node_modules/
-.vitepress/cache
+**/.vitepress/cache
 .vitepress/dist
 .env
 .superpowers/

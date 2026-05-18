@@ -1,4 +1,4 @@
-﻿# E3dc
+﻿# E3DC.NET
 
 [![NuGet](https://img.shields.io/nuget/v/E3dc?label=E3dc&logo=nuget)](https://www.nuget.org/packages/E3dc)
 [![Docker](https://img.shields.io/badge/ghcr.io-e3dc--dashboard-blue?logo=docker)](https://ghcr.io/leberkas-org/e3dc-dashboard)
@@ -113,7 +113,9 @@ Edit `samples/E3dc.Dashboard/appsettings.json`:
 
 ## Documentation
 
-Full documentation is in `/docs/` — a [VitePress](https://vitepress.dev/) site. Run it locally with:
+📖 **[leberkas-org.github.io/e3dc.net](https://leberkas-org.github.io/e3dc.net/)**
+
+Or run locally:
 
 ```bash
 cd docs && npm install && npm run dev
@@ -121,4 +123,4 @@ cd docs && npm install && npm run dev
 
 ## License
 
-TODO
+[MIT](LICENSE)

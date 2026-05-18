@@ -5,9 +5,15 @@ The `RscpClient` provides async/await request-response communication using the f
 ## Reading Data
 
 ```csharp
+using E3dc;
+using E3dc.Descriptors;
 using E3dc.Messages;
-using E3dc.Messages.Descriptors;
 
+// Read all EMS tags at once
+var response = await client.SendAsync(
+    RscpRequest.Create().Read(Ems.All));
+
+// Or pick specific tags
 var response = await client.SendAsync(
     RscpRequest.Create()
         .Read(Ems.PowerPv, Ems.PowerBat, Ems.PowerGrid, Ems.PowerHome)
@@ -43,6 +49,12 @@ var response = await client.SendAsync(
 Devices with multiple instances (inverters, batteries, etc.) use `FromDevice()`:
 
 ```csharp
+// Read all inverter tags from device 0
+var response = await client.SendAsync(
+    RscpRequest.Create()
+        .FromDevice(Pvi.Device, index: 0, b => b.Read(Pvi.All)));
+
+// Or pick specific tags
 var response = await client.SendAsync(
     RscpRequest.Create()
         .FromDevice(Pvi.Device, index: 0, b => b
@@ -63,9 +75,9 @@ Read top-level EMS data and indexed device data in one request:
 ```csharp
 var response = await client.SendAsync(
     RscpRequest.Create()
-        .Read(Ems.PowerPv, Ems.BatSoc)
-        .FromDevice(Pvi.Device, 0, b => b.Read(Pvi.AcPower))
-        .FromDevice(Bat.Device, 0, b => b.Read(Bat.Rsoc, Bat.ChargeCycles)));
+        .Read(Ems.All)
+        .FromDevice(Pvi.Device, 0, b => b.Read(Pvi.All))
+        .FromDevice(Bat.Device, 0, b => b.Read(Bat.All)));
 ```
 
 ## Error Handling

@@ -34,4 +34,12 @@ public static class Ems
     // Emergency Power
     public static readonly TagDescriptor EmergencyPowerStatus = new(RscpTag.EMS_REQ_EMERGENCY_POWER_STATUS);
     public static readonly TagDescriptor SetEmergencyPower = new(RscpTag.EMS_REQ_SET_EMERGENCY_POWER, RscpDataType.UChar8);
+
+    public static readonly TagDescriptor[] All =
+    [
+        PowerPv, PowerBat, PowerHome, PowerGrid, PowerAdd,
+        BatSoc, Autarky, SelfConsumption, CouplingMode, Mode,
+        MaxChargePower, MaxDischargePower, BatChargeLimit, UserChargeLimit,
+        EmergencyPowerStatus,
+    ];
 }

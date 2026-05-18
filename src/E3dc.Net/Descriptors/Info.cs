@@ -14,4 +14,6 @@ public static class Info
     public static readonly TagDescriptor Dns = new(RscpTag.INFO_REQ_DNS);
     public static readonly TagDescriptor Time = new(RscpTag.INFO_REQ_TIME);
     public static readonly TagDescriptor TimeZone = new(RscpTag.INFO_REQ_TIME_ZONE);
+
+    public static readonly TagDescriptor[] All = [SerialNumber, ProductionDate, SwRelease, IpAddress, SubnetMask, Gateway, Dns, Time, TimeZone];
 }

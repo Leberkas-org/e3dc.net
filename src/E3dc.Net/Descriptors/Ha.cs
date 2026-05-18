@@ -7,4 +7,6 @@ public static class Ha
 {
     public static readonly TagDescriptor DatapointList = new(RscpTag.HA_REQ_DATAPOINT_LIST);
     public static readonly TagDescriptor ActuatorStates = new(RscpTag.HA_REQ_ACTUATOR_STATES);
+
+    public static readonly TagDescriptor[] All = [DatapointList, ActuatorStates];
 }

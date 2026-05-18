@@ -11,4 +11,6 @@ public static class Dcdc
     public static readonly IndexedTag IBat = new(RscpTag.DCDC_REQ_I_BAT);
     public static readonly IndexedTag UBat = new(RscpTag.DCDC_REQ_U_BAT);
     public static readonly IndexedTag PBat = new(RscpTag.DCDC_REQ_P_BAT);
+
+    public static readonly IndexedTag[] All = [IBat, UBat, PBat];
 }
