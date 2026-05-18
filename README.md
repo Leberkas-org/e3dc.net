@@ -14,7 +14,7 @@ A .NET 10 library for communicating with E3DC S10 home battery systems via the p
 - Binary RSCP protocol implementation — framing, CRC32, Rijndael-256 encryption
 - [Akka.Streams](https://getakka.net/)-based reactive data pipeline with automatic reconnection
 - Typed snapshot API covering all major RSCP namespaces: EMS, BAT, PVI, PM, DCDC, EP, WB, DB, INFO
-- Sample Blazor dashboard demonstrating real-time monitoring, history queries, live tag exploration, and protocol-level request building
+- Sample web dashboard demonstrating real-time monitoring, history queries, live tag exploration, and protocol-level request building
 
 ## Features
 
@@ -26,7 +26,7 @@ A .NET 10 library for communicating with E3DC S10 home battery systems via the p
 
 ## Dashboard Sample
 
-A four-tab Blazor dashboard demonstrating end-to-end usage of the connector.
+A four-tab web dashboard demonstrating end-to-end usage of the connector.
 
 ### Dashboard
 
@@ -56,14 +56,14 @@ Three-panel RSCP protocol workbench: tag browser, request composer, and raw resp
 
 ```bash
 # Clone
-git clone https://github.com/your-org/e3dc-connector.git
-cd e3dc-connector
+git clone https://github.com/Leberkas-org/e3dc.net.git
+cd e3dc.net
 
 # Configure — fill in your E3DC credentials
-# Edit samples/E3dc.Dashboard/appsettings.json
+# Edit samples/E3dc.Net.Dashboard/appsettings.json
 
 # Run
-dotnet run --project samples/E3dc.Dashboard
+dotnet run --project samples/E3dc.Net.Dashboard
 
 # Or with Docker
 cd samples && docker compose up -d --build
@@ -73,17 +73,17 @@ cd samples && docker compose up -d --build
 
 ```
 src/
-  E3dc/              Core RSCP protocol library (framing, encryption, request builder, typed snapshots)
+  E3dc.Net/              Core RSCP protocol library (framing, encryption, request builder, typed snapshots)
 samples/
-  E3dc.Dashboard/    Full Blazor dashboard application
+  E3dc.Net.Dashboard/    Full web dashboard application
 docs/                         VitePress documentation site
 test/
-  E3dc.Tests/        Unit tests
+  E3dc.Net.Tests/        Unit tests
 ```
 
 ## Configuration
 
-Edit `samples/E3dc.Dashboard/appsettings.json`:
+Edit `samples/E3dc.Net.Dashboard/appsettings.json`:
 
 ```json
 {

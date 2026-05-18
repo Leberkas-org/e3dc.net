@@ -145,11 +145,11 @@ A 3-panel RSCP protocol workbench for exploring and testing arbitrary RSCP reque
 ### Local
 
 ```bash
-dotnet run --project samples/E3dc.Dashboard
+dotnet run --project samples/E3dc.Net.Dashboard
 # Open http://localhost:5000
 ```
 
-Edit `samples/E3dc.Dashboard/appsettings.json` with your connection details before starting.
+Edit `samples/E3dc.Net.Dashboard/appsettings.json` with your connection details before starting.
 
 ### Docker
 

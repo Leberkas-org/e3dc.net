@@ -74,8 +74,12 @@ export default defineConfig({
             { text: 'PM (Power Meter)', link: '/protocol/tags/pm' },
             { text: 'DB (History)', link: '/protocol/tags/db' },
             { text: 'WB (Wallbox)', link: '/protocol/tags/wb' },
+            { text: 'DCDC (Converter)', link: '/protocol/tags/dcdc' },
             { text: 'INFO (Device)', link: '/protocol/tags/info' },
             { text: 'EP (Emergency)', link: '/protocol/tags/ep' },
+            { text: 'HA (Home Auto)', link: '/protocol/tags/ha' },
+            { text: 'SYS (System)', link: '/protocol/tags/sys' },
+            { text: 'UM (Updates)', link: '/protocol/tags/um' },
           ]
         }
       ],
@@ -102,6 +106,9 @@ export default defineConfig({
         }
       ]
     },
+    socialLinks: [
+      { icon: 'github', link: 'https://github.com/Leberkas-org/e3dc.net' },
+    ],
     search: { provider: 'local' },
     footer: {
       message: 'E3DC S10 Pro RSCP Client Library',
