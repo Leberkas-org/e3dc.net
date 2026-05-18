@@ -113,13 +113,7 @@ Edit `samples/E3dc.Dashboard/appsettings.json`:
 
 ## Documentation
 
-📖 **[leberkas-org.github.io/e3dc.net](https://leberkas-org.github.io/e3dc.net/)**
-
-Or run locally:
-
-```bash
-cd docs && npm install && npm run dev
-```
+📖 **[e3dc.leberkas.org](https://e3dc.leberkas.org/)**
 
 ## License
 

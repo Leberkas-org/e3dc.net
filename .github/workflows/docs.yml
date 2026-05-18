@@ -33,8 +33,6 @@ jobs:
 
       - name: Build VitePress
         working-directory: docs
-        env:
-          VITEPRESS_BASE: /${{ github.event.repository.name }}/
         run: npx vitepress build
 
       - uses: actions/upload-pages-artifact@v3
