@@ -12,6 +12,7 @@ jobs:
     permissions:
       contents: read
       packages: write
+      id-token: write
 
     steps:
       - uses: actions/checkout@v4
@@ -32,8 +33,8 @@ jobs:
       - name: Pack E3dc.Net
         run: dotnet pack src/E3dc.Net -c Release --no-build -o ./nupkg -p:PackageVersion=${GITHUB_REF_NAME#v}
 
-      - name: Push to NuGet.org
-        run: dotnet nuget push ./nupkg/*.nupkg --source https://api.nuget.org/v3/index.json --api-key ${{ secrets.NUGET_API_KEY }} --skip-duplicate
+      - name: Push to NuGet.org (Trusted Publishing)
+        run: dotnet nuget push ./nupkg/*.nupkg --source https://api.nuget.org/v3/index.json --api-key leberkas --skip-duplicate
 
       - name: Push to GitHub Packages
         run: dotnet nuget push ./nupkg/*.nupkg --source https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json --api-key ${{ secrets.GITHUB_TOKEN }} --skip-duplicate
