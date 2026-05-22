@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.0](https://github.com/Leberkas-org/e3dc.net/compare/v0.1.0...v0.1.0) (2026-05-22)
+
+
+### Bug Fixes
+
+* changed image urls for nuget.org ([aefe503](https://github.com/Leberkas-org/e3dc.net/commit/aefe50331de7166b4cfb396e6dd035728f2956d9))
+
 ## 0.1.0 (2026-05-22)
 
 
