@@ -7,7 +7,7 @@
 
 A .NET 10 library for communicating with E3DC S10 home battery systems via the proprietary RSCP (Remote Storage Control Protocol) over TCP. Includes a full-featured sample dashboard application.
 
-![E3dc](icon.png)
+![E3dc](https://raw.githubusercontent.com/Leberkas-org/e3dc.net/refs/heads/master/icon.png)
 
 ## Overview
 
@@ -32,25 +32,25 @@ A four-tab web dashboard demonstrating end-to-end usage of the connector.
 
 Real-time energy flow schematic, scrollable power history chart, live KPI tiles, and detailed status panels for battery, inverter, power meter, DCDC converter, emergency power, and wallbox.
 
-![Dashboard top](docs/images/docs-01-dashboard-top.png)
+![Dashboard top](https://raw.githubusercontent.com/Leberkas-org/e3dc.net/refs/heads/master/docs/images/docs-01-dashboard-top.png)
 
 ### History
 
 Query E3DC on-device stored data across day, week, month, and year resolutions. Results are displayed as bar charts.
 
-![History](docs/images/docs-03-history.png)
+![History](https://raw.githubusercontent.com/Leberkas-org/e3dc.net/refs/heads/master/docs/images/docs-03-history.png)
 
 ### Explorer
 
 Live tag tree showing every polled RSCP tag with its current value — useful for discovering what your device exposes.
 
-![Explorer](docs/images/docs-04-explorer.png)
+![Explorer](https://raw.githubusercontent.com/Leberkas-org/e3dc.net/refs/heads/master/docs/images/docs-04-explorer.png)
 
 ### Request Builder
 
 Three-panel RSCP protocol workbench: tag browser, request composer, and raw response viewer. Lets you craft arbitrary RSCP requests and inspect the parsed response.
 
-![Request Builder](docs/images/docs-05-builder.png)
+![Request Builder](https://raw.githubusercontent.com/Leberkas-org/e3dc.net/refs/heads/master/docs/images/docs-05-builder.png)
 
 ## Quick Start
 
