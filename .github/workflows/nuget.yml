@@ -5,7 +5,17 @@ on:
     tags:
       - 'v*'
   workflow_call:
+    inputs:
+      version:
+        description: 'Package version (without v prefix)'
+        required: false
+        type: string
   workflow_dispatch:
+    inputs:
+      version:
+        description: 'Package version (e.g. 0.1.0 or v0.1.0)'
+        required: true
+        type: string
 
 jobs:
   publish:
@@ -31,8 +41,15 @@ jobs:
       - name: Test
         run: dotnet test -c Release --no-build
 
+      - name: Determine version
+        id: version
+        run: |
+          RAW="${{ inputs.version || github.ref_name }}"
+          echo "pkg_version=${RAW#v}" >> "$GITHUB_OUTPUT"
+        shell: bash
+
       - name: Pack E3dc.Net
-        run: dotnet pack src/E3dc.Net -c Release --no-build -o ./nupkg -p:PackageVersion=${GITHUB_REF_NAME#v}
+        run: dotnet pack src/E3dc.Net -c Release --no-build -o ./nupkg -p:PackageVersion=${{ steps.version.outputs.pkg_version }}
 
       - name: Push to NuGet.org (Trusted Publishing)
         run: dotnet nuget push ./nupkg/*.nupkg --source https://api.nuget.org/v3/index.json --api-key leberkas --skip-duplicate
